@@ -11,7 +11,6 @@
    For copyright and licensing, see file COPYING */
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
-#include <stdio.h>
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 #include "mipslab.h"  /* Declatations for these labs */
 
@@ -43,15 +42,39 @@ void user_isr( void ) {
   }
 }
 
+void inituart(void) {
+    U1STA = 0;
+    U1BRG = 520; // 42
+    U1MODESET = 0x8000; // 16e bit
+
+    U1STASET = 0x1400; // 11e bit
+    //U1STASET = 0x1000; // 13e bit
+}
+
+void putcharserial(char c) {
+    while (U1STA & (1 << 9)) { // 10e bit
+    }
+    U1TXREG = c;
+}
+
+void putstrserial(char *str) {
+    int i = 0;
+    while (str[i] != 0) {
+        putcharserial(str[i++]);
+    }
+    putcharserial('\r');
+    putcharserial('\n');
+}
+
 void initspi(void) {
     char junk;
-    SPI1CON = 0;
-    SPI1CONCLR = 0x8000; // ON = bit 15 (16e bit)
-    junk = SPI1BUF;
-    SPI1BRG = 7;
-    SPI1CONSET = 0x20; // MSTEN = bit 5 (6e bit)
-    SPI1CONSET = 0x100; // CKE = bit 8 (9e bit)
-    SPI1CONSET = 0x8000; // ON = bit 15 (16e bit)
+    SPI2CON = 0;
+    SPI2CONCLR = 0x8000; // ON = bit 15 (16e bit)
+    junk = SPI2BUF;
+    SPI2BRG = 7;
+    SPI2CONSET = 0x20; // MSTEN = bit 5 (6e bit)
+    SPI2CONSET = 0x100; // CKE = bit 8 (9e bit)
+    SPI2CONSET = 0x8000; // ON = bit 15 (16e bit)
 }
 
 /* Lab-specific initialization goes here */
@@ -78,6 +101,7 @@ void labinit( void)
     enable_interrupt();
     // asm volatile("ei");
     initspi();
+    inituart();
     return;
   }
 
@@ -89,12 +113,13 @@ void labwork( void ) {
   display_string( 0, itoaconv( prime));
   display_update();
 
-  received = SPI1BUF;
-  if (received == 0) {
-      display_string(1, "ZERO");
-  } else {
-      display_string(1, "NOT ZERO");
-  }
+  received = SPI2BUF;
+  // if (received == 0) {
+  //     display_string(1, "GJKSGJK");
+  // } else {
+  //     display_string(1, "NOT ZERO");
+  // }
   display_update();
-  delay(1000);
+  delay(100);
+  putstrserial(itoaconv_unsigned(received));
 }
