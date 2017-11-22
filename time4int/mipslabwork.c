@@ -70,10 +70,15 @@ void initspi(void) {
     char junk;
     SPI2CON = 0;
     SPI2CONCLR = 0x8000; // ON = bit 15 (16e bit)
+    SPI2CONCLR = 0x800; //32 bits data = bit 11 (12e bit)
+    SPI2CONSET = 0x400; //16 bits data = bit 10 (11e bit)
+    SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
     junk = SPI2BUF;
     SPI2BRG = 7;
     SPI2CONSET = 0x20; // MSTEN = bit 5 (6e bit)
     SPI2CONSET = 0x100; // CKE = bit 8 (9e bit)
+    SPI2STATCLR = 0x40; //Clear SPIROV bit, bit 6
+    // SPI2CONSET = 0x80; //SSEN bit 7
     SPI2CONSET = 0x8000; // ON = bit 15 (16e bit)
 }
 
@@ -112,7 +117,9 @@ void labwork( void ) {
   prime = nextprime( prime);
   display_string( 0, itoaconv( prime));
   display_update();
+  while(SPI2STAT & (1 << 11)){ //While SPI2 is busy
 
+  }
   received = SPI2BUF;
   // if (received == 0) {
   //     display_string(1, "GJKSGJK");
