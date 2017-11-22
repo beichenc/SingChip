@@ -72,7 +72,7 @@ void initspi(void) {
     SPI2CONCLR = 0x8000; // ON = bit 15 (16e bit)
     SPI2CONCLR = 0x800; //32 bits data = bit 11 (12e bit)
     SPI2CONSET = 0x400; //16 bits data = bit 10 (11e bit)
-    SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
+    //SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
     junk = SPI2BUF;
     SPI2BRG = 7;
     SPI2CONSET = 0x20; // MSTEN = bit 5 (6e bit)
@@ -80,6 +80,10 @@ void initspi(void) {
     SPI2STATCLR = 0x40; //Clear SPIROV bit, bit 6
     // SPI2CONSET = 0x80; //SSEN bit 7
     SPI2CONSET = 0x8000; // ON = bit 15 (16e bit)
+
+    // Configure RG9 to output (Connected to SS2)
+    //TRISGCLR = 0x200;
+    PORTGSET = 0x200;
 }
 
 /* Lab-specific initialization goes here */
@@ -117,10 +121,14 @@ void labwork( void ) {
   prime = nextprime( prime);
   display_string( 0, itoaconv( prime));
   display_update();
-  while(SPI2STAT & (1 << 11)){ //While SPI2 is busy
 
-  }
+  // SPI
+  while(!(SPI2STAT & 0x08));
+  SPI2BUF = 'S';
+  PORTGCLR = 0x200; // Set SS2 to 0
+  while((SPI2STAT & (1 << 11)) && !(SPI2STAT & 1)); //While SPI2 is busy and receive buffer not full
   received = SPI2BUF;
+  PORTGSET = 0x200; // Set SS2 to 1
   // if (received == 0) {
   //     display_string(1, "GJKSGJK");
   // } else {
