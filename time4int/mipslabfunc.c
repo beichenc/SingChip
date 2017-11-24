@@ -323,7 +323,7 @@ char * itoaconv( int num )
   return( &itoa_buffer[ i + 1 ] );
 }
 
-char * itoaconv_unsigned( unsigned int num )
+char * itoaconv_unsigned( uint16_t num )
 {
   register int i, sign;
   static char itoa_buffer[ ITOA_BUFSIZ ];
