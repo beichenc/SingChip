@@ -13,6 +13,8 @@
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 #include "mipslab.h"  /* Declatations for these labs */
+#include <stdio.h>
+#include <stdlib.h>
 
 int mytime = 0x5957;
 int timeoutcount = 0;
@@ -74,7 +76,7 @@ void initspi(void) {
     SPI1CONSET = 0x400; //16 bits data = bit 10 (11e bit)
     //SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
     junk = SPI1BUF;
-    SPI1BRG = 7;
+    SPI1BRG = 906; // 44100Hz
     SPI1CONSET = 0x20; // MSTEN = bit 5 (6e bit)
     SPI1CONSET = 0x100; // CKE = bit 8 (9e bit)
     SPI1STATCLR = 0x40; //Clear SPIROV bit, bit 6
@@ -118,10 +120,15 @@ void labinit( void)
     return;
   }
 
+void save(int amplitude, int index, int *amplitudeList[]) {
+    //*(amplitudeList+index) = amplitude;
+    amplitudeList[index] = amplitude;
+}
 
 
 /* This function is called repetitively from the main program */
-void listen( void ) {
+void labwork(void) {
+//int labwork( int amplitudeList ) {
   prime = nextprime( prime);
   display_string( 0, itoaconv( prime));
   display_update();
@@ -133,13 +140,27 @@ void listen( void ) {
   while((SPI1STAT & (1 << 11)) && !(SPI1STAT & 1)); //While SPI2 is busy and receive buffer not full
   received = SPI1BUF;
   PORTBSET = 0x4; // Set SS1 to 1
+
+  // static int index = 0;
+  // save(received, index, amplitudeList);
+  // index++;
+
+  // if (index == 11025) {
+  //     // Måste vi sätta en null int efter sista int i listan?
+  //     display_string(1, itoaconv(sizeof(amplitudeList)/sizeof(int)));
+  //     return 0;
+  // }
+  // return 1;
+
+
+
+
   if (received == 0) {
       display_string(1, "ZERO");
   } else {
       display_string(1, itoaconv(received));
   }
   display_update();
-  delay(10);
   //putstrserial(itoaconv_unsigned(received));
 }
 

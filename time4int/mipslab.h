@@ -16,6 +16,7 @@ uint8_t spi_send_recv(uint8_t data);
 
 /* Declare lab-related functions from mipslabfunc.c */
 char * itoaconv( int num );
+//int labwork(int);
 void labwork(void);
 int nextprime( int inval );
 void quicksleep(int cyc);
