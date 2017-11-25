@@ -42,26 +42,26 @@ int main(void) {
 	TRISDSET = (1 << 8);
 	TRISFSET = (1 << 1);
 
-	// /* Set up SPI as master */
-	// SPI2CON = 0;
-	// SPI2BRG = 4;
-	// /* SPI2STAT bit SPIROV = 0; */
-	// SPI2STATCLR = 0x40;
-	// /* SPI2CON bit CKP = 1; */
-    //     SPI2CONSET = 0x40;
-	// /* SPI2CON bit MSTEN = 1; */
-	// SPI2CONSET = 0x20;
-	// /* SPI2CON bit ON = 1; */
-	// SPI2CONSET = 0x8000;
+	/* Set up SPI as master */
+	SPI2CON = 0;
+	SPI2BRG = 4;
+	/* SPI2STAT bit SPIROV = 0; */
+	SPI2STATCLR = 0x40;
+	/* SPI2CON bit CKP = 1; */
+    SPI2CONSET = 0x40;
+	/* SPI2CON bit MSTEN = 1; */
+	SPI2CONSET = 0x20;
+	/* SPI2CON bit ON = 1; */
+	SPI2CONSET = 0x8000;
 
-	// display_init();
-	// display_string(0, "KTH/ICT lab");
-	// display_string(1, "in Computer");
-	// display_string(2, "Engineering");
-	// display_string(3, "Welcome!");
-	// display_update();
-	//
-	// display_image(96, icon);
+	display_init();
+	display_string(0, "KTH/ICT lab");
+	display_string(1, "in Computer");
+	display_string(2, "Engineering");
+	display_string(3, "Welcome!");
+	display_update();
+
+	display_image(96, icon);
 
 	labinit(); /* Do any lab-specific initialization */
 

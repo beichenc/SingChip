@@ -354,5 +354,11 @@ char * itoaconv_unsigned( unsigned int num )
   // }
   /* Since the loop always sets the index i to the next empty position,
    * we must add 1 in order to return a pointer to the first occupied position. */
-  return( &itoa_buffer[ i + 1 ] );
+  int j;
+  static char itoa_buffer_sixteen[17];
+  itoa_buffer_sixteen[16] = 0;
+  for (j = 0; j < 16; j++) {
+	  itoa_buffer_sixteen[j] = itoa_buffer[i+1];
+  }
+  return( &itoa_buffer_sixteen[0] );
 }

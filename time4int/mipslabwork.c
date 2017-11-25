@@ -68,22 +68,26 @@ void putstrserial(char *str) {
 
 void initspi(void) {
     char junk;
-    SPI2CON = 0;
-    SPI2CONCLR = 0x8000; // ON = bit 15 (16e bit)
-    SPI2CONCLR = 0x800; //32 bits data = bit 11 (12e bit)
-    SPI2CONSET = 0x400; //16 bits data = bit 10 (11e bit)
+    SPI1CON = 0;
+    SPI1CONCLR = 0x8000; // ON = bit 15 (16e bit)
+    SPI1CONCLR = 0x800; //32 bits data = bit 11 (12e bit)
+    SPI1CONSET = 0x400; //16 bits data = bit 10 (11e bit)
     //SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
-    junk = SPI2BUF;
-    SPI2BRG = 7;
-    SPI2CONSET = 0x20; // MSTEN = bit 5 (6e bit)
-    SPI2CONSET = 0x100; // CKE = bit 8 (9e bit)
-    SPI2STATCLR = 0x40; //Clear SPIROV bit, bit 6
+    junk = SPI1BUF;
+    SPI1BRG = 7;
+    SPI1CONSET = 0x20; // MSTEN = bit 5 (6e bit)
+    SPI1CONSET = 0x100; // CKE = bit 8 (9e bit)
+    SPI1STATCLR = 0x40; //Clear SPIROV bit, bit 6
     // SPI2CONSET = 0x80; //SSEN bit 7
-    SPI2CONSET = 0x8000; // ON = bit 15 (16e bit)
+    SPI1CONSET = 0x8000; // ON = bit 15 (16e bit)
 
-    // Configure RG9 to output (Connected to SS2)
-    //TRISGCLR = 0x200;
-    PORTGSET = 0x200;
+    // Configure RB2 to digital
+    //AD1PCFGSET = 0x4; //redan klart i main
+
+    // Configure RB2 to output (Connected to SS2)
+    TRISBCLR = 0x4;
+    PORTBSET = 0x4;
+    ODCB = 0x0;
 }
 
 /* Lab-specific initialization goes here */
@@ -110,7 +114,7 @@ void labinit( void)
     enable_interrupt();
     // asm volatile("ei");
     initspi();
-    inituart();
+    //inituart();
     return;
   }
 
@@ -123,18 +127,18 @@ void labwork( void ) {
   display_update();
 
   // SPI
-  while(!(SPI2STAT & 0x08));
-  SPI2BUF = 'S';
-  PORTGCLR = 0x200; // Set SS2 to 0
-  while((SPI2STAT & (1 << 11)) && !(SPI2STAT & 1)); //While SPI2 is busy and receive buffer not full
-  received = SPI2BUF;
-  PORTGSET = 0x200; // Set SS2 to 1
-  // if (received == 0) {
-  //     display_string(1, "GJKSGJK");
-  // } else {
-  //     display_string(1, "NOT ZERO");
-  // }
+  while(!(SPI1STAT & 0x08));
+  SPI1BUF = 'S';
+  PORTBCLR = 0x4; // Set SS1 to 0
+  while((SPI1STAT & (1 << 11)) && !(SPI1STAT & 1)); //While SPI2 is busy and receive buffer not full
+  received = SPI1BUF;
+  PORTBSET = 0x4; // Set SS1 to 1
+  if (received == 0) {
+      display_string(1, "ZERO");
+  } else {
+      display_string(1, itoaconv(received));
+  }
   display_update();
   delay(100);
-  putstrserial(itoaconv_unsigned(received));
+  //putstrserial(itoaconv_unsigned(received));
 }
