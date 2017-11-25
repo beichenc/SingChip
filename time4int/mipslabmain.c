@@ -64,17 +64,16 @@ int main(void) {
 	display_image(96, icon);
 
 	labinit(); /* Do any lab-specific initialization */
-	int n = 11025; // Vilket värde ska detta ha?
 	//int *amplitudeList = malloc((n-1)*sizeof(int));
-	int amplitudeList[n];
 
 	while( 1 )
 	{
-		labwork();
-	  //int isContinue = labwork(amplitudeList); /* Do lab-specific things again and again */
-	  // if (isContinue == 0) {
-		//   break;
-	  // }
+		//labwork();
+
+	  int isContinue = labwork(); /* Do lab-specific things again and again */
+	  if (isContinue == 0) {
+		  break;
+	  }
 	  //test();
 	}
 	return 0;

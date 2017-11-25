@@ -76,7 +76,8 @@ void initspi(void) {
     SPI1CONSET = 0x400; //16 bits data = bit 10 (11e bit)
     //SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
     junk = SPI1BUF;
-    SPI1BRG = 906; // 44100Hz
+    //SPI1BRG = 249; // 10000Hz (sets of 16-bit data per second)
+    SPI1BRG = 7;
     SPI1CONSET = 0x20; // MSTEN = bit 5 (6e bit)
     SPI1CONSET = 0x100; // CKE = bit 8 (9e bit)
     SPI1STATCLR = 0x40; //Clear SPIROV bit, bit 6
@@ -120,18 +121,35 @@ void labinit( void)
     return;
   }
 
-void save(int amplitude, int index, int *amplitudeList[]) {
+void save(int amplitude, int index, int amplitudeList[]) {
     //*(amplitudeList+index) = amplitude;
     amplitudeList[index] = amplitude;
 }
 
+int maximum(int array[]) {
+    int size = sizeof(array)/sizeof(int);
+    int i = 0;
+    int max = 0;
+    for (i = 0; i < size; i++) {
+        if (array[i] < 0) {
+            if (array[i]*(-1) > max) {
+                max = array[i]*(-1);
+            }
+        } else {
+            if (array[i] > max) {
+                max = array[i];
+            }
+        }
+    }
+    return max;
+}
 
 /* This function is called repetitively from the main program */
-void labwork(void) {
-//int labwork( int amplitudeList ) {
-  prime = nextprime( prime);
-  display_string( 0, itoaconv( prime));
-  display_update();
+//void labwork(void) {
+int labwork( void ) {
+  // prime = nextprime( prime);
+  // display_string( 0, itoaconv( prime));
+  // display_update();
 
   // SPI
   while(!(SPI1STAT & 0x08));
@@ -141,26 +159,35 @@ void labwork(void) {
   received = SPI1BUF;
   PORTBSET = 0x4; // Set SS1 to 1
 
+  if(received == -1) {
+      return;
+  }
+  display_string(2, itoaconv(received));
+
+  // static int amplitudeList[2500];
+  //
   // static int index = 0;
   // save(received, index, amplitudeList);
   // index++;
-
-  // if (index == 11025) {
+  //
+  // //display_string(0, itoaconv(index));
+  // if (index >= 2499) {
   //     // Måste vi sätta en null int efter sista int i listan?
-  //     display_string(1, itoaconv(sizeof(amplitudeList)/sizeof(int)));
+  //     //display_string(1, itoaconv(sizeof(amplitudeList)/sizeof(int)));
+  //     display_string(1, itoaconv(maximum(amplitudeList)));
   //     return 0;
   // }
-  // return 1;
+  return 1;
 
 
 
 
-  if (received == 0) {
-      display_string(1, "ZERO");
-  } else {
-      display_string(1, itoaconv(received));
-  }
-  display_update();
+  // if (received == 0) {
+  //     display_string(1, "ZERO");
+  // } else {
+  //     display_string(1, itoaconv(received));
+  // }
+  // display_update();
   //putstrserial(itoaconv_unsigned(received));
 }
 
