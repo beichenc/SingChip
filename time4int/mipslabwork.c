@@ -121,7 +121,7 @@ void labinit( void)
 
 
 /* This function is called repetitively from the main program */
-void labwork( void ) {
+void listen( void ) {
   prime = nextprime( prime);
   display_string( 0, itoaconv( prime));
   display_update();
@@ -139,6 +139,13 @@ void labwork( void ) {
       display_string(1, itoaconv(received));
   }
   display_update();
-  delay(100);
+  delay(10);
   //putstrserial(itoaconv_unsigned(received));
 }
+
+// void test (void) {
+//     static int i = 0;
+//     display_string(2, itoaconv(i));
+//     i++;
+//     delay(10);
+// }
