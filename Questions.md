@@ -1,3 +1,5 @@
 - Behöver vi resistorer
 - Tar USB upp SPI1 eller kan vi använda USB tillsammans med både SPI1 (mikrofon) och SPI2 (skärmen)?
 - Hur kan man skriva till konsolen i C? printf kompileras inte.
+
+- Hur ska FFT veta vår sample rate?
