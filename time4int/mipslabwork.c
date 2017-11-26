@@ -77,7 +77,8 @@ void initspi(void) {
     //SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
     junk = SPI1BUF;
     //SPI1BRG = 249; // 10000Hz (sets of 16-bit data per second)
-    SPI1BRG = 7;
+    SPI1BRG = 8; // 4.7Mhz, större SPI1BRG fungerar inte - varför?
+    // SPI1BRG = 7 // 5.3 Mhz
     SPI1CONSET = 0x20; // MSTEN = bit 5 (6e bit)
     SPI1CONSET = 0x100; // CKE = bit 8 (9e bit)
     SPI1STATCLR = 0x40; //Clear SPIROV bit, bit 6
@@ -159,19 +160,20 @@ int labwork( void ) {
   received = SPI1BUF;
   PORTBSET = 0x4; // Set SS1 to 1
 
-  if(received == -1) {
-      return;
-  }
+  // if(received == -1) {
+  //     return;
+  // }
   display_string(2, itoaconv(received));
+  //display_update();
 
-  // static int amplitudeList[2500];
+  // static int amplitudeList[1125];
   //
   // static int index = 0;
   // save(received, index, amplitudeList);
   // index++;
   //
   // //display_string(0, itoaconv(index));
-  // if (index >= 2499) {
+  // if (index >= 1124) {
   //     // Måste vi sätta en null int efter sista int i listan?
   //     //display_string(1, itoaconv(sizeof(amplitudeList)/sizeof(int)));
   //     display_string(1, itoaconv(maximum(amplitudeList)));
@@ -187,7 +189,7 @@ int labwork( void ) {
   // } else {
   //     display_string(1, itoaconv(received));
   // }
-  // display_update();
+  //display_update();
   //putstrserial(itoaconv_unsigned(received));
 }
 
