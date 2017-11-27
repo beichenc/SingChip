@@ -128,7 +128,8 @@ void labinit( void)
       int size = sizeof(array)/sizeof(short);
       int i = 0;
       int max = 0;
-      for (i = 0; i < size; i++) {
+      // Kollar upp till size/2 för då får vi vår max frekvens (Nyqvist frekvens).
+      for (i = 0; i < size/2; i++) {
           if (array[i] < 0) {
               if (array[i]*(-1) > max) {
                   max = array[i]*(-1);
@@ -146,13 +147,16 @@ void save(short amplitude, short* amplitudeList[]) {
     static int index = 0;
     *amplitudeList[index] = amplitude;
     if (sizeof(*amplitudeList)/sizeof(short) == fft_size) {
-        // Använd bibliotek
+        // TODO: Behöver vi initialisera alla värden till 0?
         short imaginaryList[fft_size];
+        // Använd bibliotek
         fix_fft(*amplitudeList, imaginaryList, 11);
         // Ta max av amplitudeList, ta ut index och räkna ut frekvens.
         int indexOfMax = maximum(*amplitudeList);
         int frequency = indexOfMax*fft_sample_rate/fft_size;
-        display_string(2, itoaconv(frequency));
+        // TODO: Test om vi behöver output från imaginaryList
+        display_string(1, itoaconv(imaginaryList[maximum(imaginaryList)]));
+        //display_string(2, itoaconv(frequency));
         index = 0;
     } else {
         index++;
