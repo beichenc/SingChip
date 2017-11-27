@@ -30,7 +30,7 @@ void user_isr( void ) {
   if(IFS(0) & (1 << 8)){
     if(timeoutcount == 9){
       time2string( textstring, mytime);
-      display_string( 3, textstring);
+      // display_string( 3, textstring);
       display_update();
       tick( &mytime);
       IFSCLR(0) = 0x100;
@@ -124,7 +124,7 @@ void labinit( void)
     return;
   }
 
-  int maximum(short array[]) {
+  int maximum(short* array) {
       int size = sizeof(array)/sizeof(short);
       int i = 0;
       int max = 0;
@@ -143,20 +143,92 @@ void labinit( void)
       return i;
   }
 
-void save(short amplitude, short* amplitudeList[]) {
+  void squareroot(short* realList, short* imaginaryList, short* frequencyList){
+    int i;
+    short num;
+    short res;
+    short bit = 1 << 14; // The second-to-top bit is set: 1 << 30 for 32 bits
+    for(i=0;i<fft_size/2;i++){
+      res = 0;
+      num = (realList[i] * realList[i] + imaginaryList[i] * imaginaryList[i]);
+      // "bit" starts at the highest power of four <= the argument.
+      while (bit > num)
+          bit >>= 2;
+
+      while (bit != 0) {
+          if (num >= res + bit) {
+              num -= res + bit;
+              res = (res >> 1) + bit;
+          }
+          else
+              res >>= 1;
+          bit >>= 2;
+      }
+      frequencyList[i] = res;
+    }
+  }
+
+  // void squareroot(short* realList, short* imaginaryList, short* frequencyList){
+  //   // Now we find the square root of realNumbers[k] using a very
+  //           // fast (but compiler dependent) integer approximation:
+  //           // (adapted from: http://www.codecodex.com/wiki/Calculate_an_integer_square_root)
+  //     long place;
+	// 		long root;
+  //     int k;
+  //     for(k = 0; k < fft_size/2; k++){
+  //       place = 0x40000000;
+  // 			root = 0;
+  //       frequencyList[k] = (realList[k] * realList[k] + imaginaryList[k] * imaginaryList[k]);
+  //       if (frequencyList[k] >= 0) // Ensure we don't have a negative number
+  // 			{
+  // 				while (place > frequencyList[k]) place = place >> 2;
+  //
+  // 				while (place)
+  // 				{
+  // 					if (frequencyList[k] >= root + place)
+  // 					{
+  // 						frequencyList[k] -= root + place;
+  // 						root += place * 2;
+  // 					}
+  // 					root = root >> 1;
+  // 					place = place >> 2;
+  // 				}
+  // 			}
+  // 			frequencyList[k] = root;
+  //     }
+  // }
+
+void save(short amplitude, short* amplitudeList) {
     static int index = 0;
-    *amplitudeList[index] = amplitude;
-    if (sizeof(*amplitudeList)/sizeof(short) == fft_size) {
+    *(amplitudeList+index) = amplitude;
+    short amplitude2 = *(amplitudeList+index);
+    if(amplitude==amplitude2){
+      display_string(1, itoaconv(amplitude));
+    }
+    if (index == (fft_size-1)) {
+        //display_string(2, "amplitudeList full");
         // TODO: Behöver vi initialisera alla värden till 0?
         short imaginaryList[fft_size];
+        static int imindex = 0;
+        while(imindex < fft_size){
+          imaginaryList[imindex] = 0;
+          imindex++;
+        }
         // Använd bibliotek
-        fix_fft(*amplitudeList, imaginaryList, 11);
+        fix_fft(amplitudeList, imaginaryList, 11);
+        //Pytagoras sats på den nya amplitudeList och imaginaryList
+        short frequencyList[fft_size/2];
+        squareroot(amplitudeList, imaginaryList, frequencyList);
+        // short frequencyList[2] = {0,0};
+        // short list1[4] = {3,1,1,1};
+        // short list2[4] = {4,1,1,1};
+        // squareroot(list1, list2, frequencyList);
         // Ta max av amplitudeList, ta ut index och räkna ut frekvens.
-        int indexOfMax = maximum(*amplitudeList);
+        int indexOfMax = maximum(frequencyList);
         int frequency = indexOfMax*fft_sample_rate/fft_size;
         // TODO: Test om vi behöver output från imaginaryList
-        display_string(1, itoaconv(imaginaryList[maximum(imaginaryList)]));
-        //display_string(2, itoaconv(frequency));
+        // display_string(3, itoaconv(frequencyList[0]));
+        display_string(2, itoaconv(frequency));
         index = 0;
     } else {
         index++;
@@ -180,11 +252,13 @@ int labwork( void ) {
   received = SPI1BUF;
   PORTBSET = 0x4; // Set SS1 to 1
 
-  short* amplitudeList[fft_size];
+  short amplitudeList[fft_size];
   if (count == 36) {
+      display_string(0,"Count is 36");
       save(received, amplitudeList);
       count = 0;
   } else {
+      display_string(0,"Not 36");
       count++;
   }
   // if(received == -1) {
