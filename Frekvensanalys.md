@@ -25,3 +25,10 @@ Bara en cycle -> 9000Hz sample rate för max 4186Hz ljud. Vi vill känna igen 60
 
 9000/N = 8 -> N = 1125.
 -> Vi samplar i 1125*1/9000 = 0.125s
+
+---
+
+Om vi vill ha 2^x = N som är högre än 1125, så får vi ta N = 2048.
+Om vi har sample rate = 8192 Hz då är varje intervall 4Hz.
+
+Om vi tar SPI1BRG = 8, då är baud rate ~294117Hz. Om vi skippar och tar var 36:e sample så blir sample rate ~8170Hz.

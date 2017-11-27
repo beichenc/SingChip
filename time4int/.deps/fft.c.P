@@ -1,0 +1,2 @@
+fft.c.o: fft.c fft.h
+fft.c fft.h :

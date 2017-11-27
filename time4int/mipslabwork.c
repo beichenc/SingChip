@@ -19,6 +19,8 @@
 int mytime = 0x5957;
 int timeoutcount = 0;
 int prime = 1234567;
+int fft_sample_rate = 8192;
+const int fft_size = 2048;
 
 char textstring[] = "text, more text, and even more text!";
 char received;
@@ -122,27 +124,39 @@ void labinit( void)
     return;
   }
 
-void save(int amplitude, int index, int amplitudeList[]) {
-    //*(amplitudeList+index) = amplitude;
-    amplitudeList[index] = amplitude;
-}
+  int maximum(short array[]) {
+      int size = sizeof(array)/sizeof(short);
+      int i = 0;
+      int max = 0;
+      for (i = 0; i < size; i++) {
+          if (array[i] < 0) {
+              if (array[i]*(-1) > max) {
+                  max = array[i]*(-1);
+              }
+          } else {
+              if (array[i] > max) {
+                  max = array[i];
+              }
+          }
+      }
+      return i;
+  }
 
-int maximum(int array[]) {
-    int size = sizeof(array)/sizeof(int);
-    int i = 0;
-    int max = 0;
-    for (i = 0; i < size; i++) {
-        if (array[i] < 0) {
-            if (array[i]*(-1) > max) {
-                max = array[i]*(-1);
-            }
-        } else {
-            if (array[i] > max) {
-                max = array[i];
-            }
-        }
+void save(short amplitude, short* amplitudeList[]) {
+    static int index = 0;
+    *amplitudeList[index] = amplitude;
+    if (sizeof(*amplitudeList)/sizeof(short) == fft_size) {
+        // Använd bibliotek
+        short imaginaryList[fft_size];
+        fix_fft(*amplitudeList, imaginaryList, 11);
+        // Ta max av amplitudeList, ta ut index och räkna ut frekvens.
+        int indexOfMax = maximum(*amplitudeList);
+        int frequency = indexOfMax*fft_sample_rate/fft_size;
+        display_string(2, itoaconv(frequency));
+        index = 0;
+    } else {
+        index++;
     }
-    return max;
 }
 
 /* This function is called repetitively from the main program */
@@ -152,6 +166,8 @@ int labwork( void ) {
   // display_string( 0, itoaconv( prime));
   // display_update();
 
+  static int count = 0;
+
   // SPI
   while(!(SPI1STAT & 0x08));
   SPI1BUF = 'S';
@@ -160,10 +176,17 @@ int labwork( void ) {
   received = SPI1BUF;
   PORTBSET = 0x4; // Set SS1 to 1
 
+  short* amplitudeList[fft_size];
+  if (count == 36) {
+      save(received, amplitudeList);
+      count = 0;
+  } else {
+      count++;
+  }
   // if(received == -1) {
   //     return;
   // }
-  display_string(2, itoaconv(received));
+  //display_string(2, itoaconv(received));
   //display_update();
 
   // static int amplitudeList[1125];
