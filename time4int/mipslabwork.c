@@ -125,22 +125,25 @@ void labinit( void)
   }
 
   int maximum(short* array) {
-      int size = sizeof(array)/sizeof(short);
-      int i = 0;
+      int i;
       int max = 0;
-      // Kollar upp till size/2 för då får vi vår max frekvens (Nyqvist frekvens).
-      for (i = 0; i < size/2; i++) {
+      int maxindex;
+      // Kollar upp till size, då vi redan har halverat listan innan vi skickat in,
+      //då får vi vår max frekvens (Nyqvist frekvens).
+      for (i = 0; i < fft_size/2; i++) {
           if (array[i] < 0) {
               if (array[i]*(-1) > max) {
                   max = array[i]*(-1);
+                  maxindex = i;
               }
           } else {
               if (array[i] > max) {
                   max = array[i];
+                  maxindex = i;
               }
           }
       }
-      return i;
+      return maxindex;
   }
 
   void squareroot(short* realList, short* imaginaryList, short* frequencyList){
@@ -227,8 +230,33 @@ void save(short amplitude, short* amplitudeList) {
         int indexOfMax = maximum(frequencyList);
         int frequency = indexOfMax*fft_sample_rate/fft_size;
         // TODO: Test om vi behöver output från imaginaryList
-        // display_string(3, itoaconv(frequencyList[0]));
-        display_string(2, itoaconv(frequency));
+        int i;
+        int max = 0;
+        int maxindex;
+        // Kollar upp till size, då vi redan har halverat listan innan vi skickat in,
+        //då får vi vår max frekvens (Nyqvist frekvens).
+        for (i = 0; i < fft_size/2; i++) {
+            display_string(2, itoaconv(i));
+            if (frequencyList[i] > max) {
+                max = frequencyList[i];
+                maxindex = i;
+            }
+        }
+        i=0;
+        //display_string(3, itoaconv(maxindex));
+
+        // //Check if frequencyList is empty
+        // int i;
+        // int zerolist = 1;
+        // for(i = 0; i< sizeof(frequencyList)/sizeof(short); i++){
+        //   if(frequencyList[i]!=0){
+        //     zerolist = 0;
+        //     display_string(2,itoaconv(frequencyList[i]));
+        //   }
+        // }
+        // if(zerolist==1){
+        //   display_string(2, "ZERO LIST");
+        // }
         index = 0;
     } else {
         index++;
