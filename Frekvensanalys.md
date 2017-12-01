@@ -32,3 +32,8 @@ Om vi vill ha 2^x = N som är högre än 1125, så får vi ta N = 2048.
 Om vi har sample rate = 8192 Hz då är varje intervall 4Hz.
 
 Om vi tar SPI1BRG = 8, då är baud rate ~294117Hz. Om vi skippar och tar var 36:e sample så blir sample rate ~8170Hz.
+
+---
+
+8000Hz
+-> varje intervall är 8000/2048 = 3.90625 Hz
