@@ -1,0 +1,2 @@
+tonetable.c.o: tonetable.c
+tonetable.c :

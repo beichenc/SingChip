@@ -1,0 +1,2 @@
+fix_fft.c.o: fix_fft.c
+fix_fft.c :
