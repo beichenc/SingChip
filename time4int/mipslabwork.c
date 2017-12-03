@@ -15,14 +15,17 @@
 #include "mipslab.h"  /* Declatations for these labs */
 #include <stdio.h>
 #include <stdlib.h>
-#include "kiss_fft.h"
+#include <math.h>
+#include "fft.h"
 
 int mytime = 0x5957;
 int timeoutcount = 0;
 int prime = 1234567;
-int fft_sample_rate = 8000;
-const int fft_size = 2048;
-short amplitudeList[2048];
+int fft_sample_rate = 4000;
+const int fft_size = 1024;
+short amplitudeList[1024];
+short imaginaryList[1024];
+int hanning_factor = 32768;
 // char twinkleSong[7];
 // // TODO: Verify this value
 // short backgroundSound = 50;
@@ -75,7 +78,8 @@ void labinit( void)
     //PR2 = 31250;
     T2CONCLR = (7 << 4);
     //Period of 0.000125 ms (8000Hz)
-    PR2 = 10000;
+    //PR2 = 10000;
+    PR2 = 20000; // 4000Hz
     IECSET(0) = (1 << 8); //enable the timer 2 interrupt (bit 8)
     IPCSET(2) = 0xC; //Pirority 3 (bits 2-4)
     IECSET(0) = (1 << 19);
@@ -98,9 +102,6 @@ void labinit( void)
       for (i = 0; i < fft_size/2; i++) {
           if (array[i] > max) {
               max = array[i];
-              // display_string(3, itoaconv(max));
-              // display_update();
-              //delay(100);
               maxindex = i;
           }
       }
@@ -205,48 +206,31 @@ void save(short amplitude, int index, short* amplitudeList) {
 
 void do_fft(short* amplitudeList) {
     // TODO: Behöver vi initialisera alla värden till 0?
-    short imaginaryList[fft_size];
-    static int imindex = 0;
+    static int imindex;
+    imindex = 0;
     while(imindex < fft_size){
-      imaginaryList[imindex] = 0;
-      imindex++;
+        imaginaryList[imindex] = 0;
+        imindex++;
     }
+
+    //Applicera Hanning window på amplitudelist
+    int i;
+    for (i = 0; i < fft_size; i++) {
+        //amplitudeList[i] = hanning[i] * amplitudeList[i] / hanning_factor;
+        amplitudeList[i] = hanning[i] * amplitudeList[i];
+    }
+
     // Använd bibliotek
     //fix_fft(amplitudeList, imaginaryList, 10);
-    //gst_spectrum_fix_fft(amplitudeList, imaginaryList, 10, 0);
-    kiss_fft_cfg cfg = kiss_fft_alloc( fft_size ,0 ,0,0 );
-
-        while ...
-
-            ... // put kth sample in cx_in[k].r and cx_in[k].i
-
-            kiss_fft( cfg , cx_in , cx_out );
-
-            ... // transformed. DC is in cx_out[0].r and cx_out[0].i
-
-        free(cfg);
+    gst_spectrum_fix_fft(amplitudeList, imaginaryList, 10, 0);
 
     //Pytagoras sats på den nya amplitudeList och imaginaryList
     short fftOutput[fft_size/2];
     squareroot(amplitudeList, imaginaryList, fftOutput);
-
-    // short fftOutput[2];
-    // fftOutput[0] = 0;
-    // fftOutput[1] = 0;
-    // short list1[4];
-    // list1[0] = 1;
-    // list1[1] = 3;
-    // list1[2] = 1;
-    // list1[3] = 1;
-    // short list2[4];
-    // list2[0] = 1;
-    // list2[1] = 4;
-    // list2[2] = 1;
-    // list2[3] = 1;
-    // squareroot(list1, list2, fftOutput);
     // Ta max av amplitudeList, ta ut index och räkna ut frekvens.
     int indexOfMax = maximum(fftOutput);
     int frequency = indexOfMax*fft_sample_rate/fft_size;
+    display_string(2, itoaconv(indexOfMax));
     display_string(3, itoaconv(frequency));
     display_update();
 
@@ -278,25 +262,6 @@ void do_fft(short* amplitudeList) {
     //         max = fftOutput[i];
     //         maxindex = i;
     //     }
-    // }
-
-
-
-
-    //i=0;
-    //display_string(3, itoaconv(maxindex));
-
-    // //Check if fftOutput is empty
-    // int i;
-    // int zerolist = 1;
-    // for(i = 0; i< sizeof(fftOutput)/sizeof(short); i++){
-    //   if(fftOutput[i]!=0){
-    //     zerolist = 0;
-    //     display_string(2,itoaconv(fftOutput[i]));
-    //   }
-    // }
-    // if(zerolist==1){
-    //   display_string(2, "ZERO LIST");
     // }
 }
 

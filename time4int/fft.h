@@ -27,13 +27,13 @@
 // Definitions
 #define N_WAVE      1024    // full length of Sinewave[]
 #define LOG2_N_WAVE 10      // log2(N_WAVE)
-#define fixed short
-
 
 
 // Function prototypes
 void fix_fft(short fr[], short fi[], short m);
-int gst_spectrum_fix_fft (fixed fr[], fixed fi[], int m, int inverse);
-static fixed gst_spectrum_fix_mpy (fixed a, fixed b);
+int gst_spectrum_fix_fft (short fr[], short fi[], int m, int inverse);
+extern short gst_spectrum_Sinewave[N_WAVE];     /* placed at end of this file for clarity */
+extern double hanning[N_WAVE];     /* placed at end of this file for clarity */
+static short gst_spectrum_fix_mpy (short a, short b);
 
 #endif
