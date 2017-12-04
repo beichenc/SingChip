@@ -10,13 +10,21 @@ public class Main {
         //generator.hanning();
         //generator.log2nToDouble();
 
-        PlayWav player = new PlayWav();
+        //PlayWav player = new PlayWav();
 
-        try {
+        /*try {
             //player.play();
             player.playWithVolumeControl();
         } catch (Exception e){
             System.out.println(e.getMessage());
+        }*/
+
+        OscillatorPlayer player = new OscillatorPlayer();
+
+        try {
+            player.play();
+        } catch (Exception e) {
+
         }
     }
 }

@@ -37,6 +37,8 @@ char received;
 // Testing
 int number_of_ffts_done = 0;
 
+// TODO: Use volatile values?
+
 void initspi(void) {
     char junk;
     SPI1CON = 0;
