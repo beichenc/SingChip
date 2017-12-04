@@ -47,4 +47,12 @@ public class SineAndHanningGenerator {
             }
         }
     }
+
+    public void log2nToDouble() {
+        for (int i = 0; i < 12; i++) {
+            double j = i*1.0/12.0;
+            double value = Math.pow(2.0,j);
+            System.out.printf("%.10f"+",", value);
+        }
+    }
 }

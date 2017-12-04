@@ -30,6 +30,7 @@ int hanning_factor = 32768;
 // // TODO: Verify this value
 // short backgroundSound = 50;
 // char toneList[7][];
+char tone[3];
 
 char textstring[] = "text, more text, and even more text!";
 char received;
@@ -230,24 +231,24 @@ void do_fft(short* amplitudeList) {
     // Ta max av amplitudeList, ta ut index och räkna ut frekvens.
     int indexOfMax = maximum(fftOutput);
     int frequency = indexOfMax*fft_sample_rate/fft_size;
-    display_string(2, itoaconv(indexOfMax));
     display_string(3, itoaconv(frequency));
+
+    freqToTone(frequency, tone);
+    display_string(2, tone);
     display_update();
 
-    // // char tone[] = freqToTone(frequency);
-    // //
-    // // // Check validity of frequency and save if valid
-    // // static int toneIndex = 0;
-    // // int validTone = validTone(tone, toneIndex);
-    // // if (validTone) {
-    // //     saveFrequencyAsTone(tone, toneIndex);
-    // // }
-    // // // Tone sequence full - we ignore all values and wait for stop button to be pressed
-    // // if (toneIndex == 7) {
-    // //     return;
-    // // } else {
-    // //     toneIndex++;
-    // // }
+    // // Check validity of frequency and save if valid
+    // static int toneIndex = 0;
+    // int validTone = validTone(tone, toneIndex);
+    // if (validTone) {
+    //     saveFrequencyAsTone(tone, toneIndex);
+    // }
+    // // Tone sequence full - we ignore all values and wait for stop button to be pressed
+    // if (toneIndex == 7) {
+    //     return;
+    // } else {
+    //     toneIndex++;
+    // }
 
 
     // int i;
@@ -327,44 +328,6 @@ int labwork( void ) {
 //   if(IFS(0) & (1 << 19)){
 //     PORTE = PORTE + 1;
 //     IFSCLR(0) = 0x80000;
-//   }
-// }
-
-// int listen( void){
-//   if(IFS(0) & 0x100){
-//       // SPI
-//       // while(!(SPI1STAT & 0x08));
-//       // SPI1BUF = 'S';
-//       // PORTBCLR = 0x4; // Set SS1 to 0
-//       // while((SPI1STAT & (1 << 11)) && !(SPI1STAT & 1)); //While SPI2 is busy and receive buffer not full
-//       // received = SPI1BUF;
-//       // PORTBSET = 0x4; // Set SS1 to 1
-//       received = 42; // Testing, but this gives same speed as with SPI so nothing wrong with SPI baud rate
-//     if(timeoutcount == 2048){
-//         number_of_ffts_done++;
-//         display_string(2, "Full");
-//         display_string(0, itoaconv(number_of_ffts_done));
-//         display_update();
-//         // Sample array full - Time to do FFT
-//       //do_fft(amplitudeList);
-//       display_string(3, "FFT done");
-//       display_update();
-//       IFSCLR(0) = 0x100;
-//       timeoutcount = 0;
-//       return 1;
-//     } else{
-//         display_string(2, "NOT full");
-//         display_string(3, itoaconv(timeoutcount));
-//         display_update();
-//         // Save to sample array
-//         // TODO: What was the benefit of using static instead of global?
-//         save(received, timeoutcount, amplitudeList);
-//       IFSCLR(0) = 0x100;
-//       timeoutcount = timeoutcount + 1 ;
-//       return 0;
-//     }
-//   } else{
-//     return 0;
 //   }
 // }
 
