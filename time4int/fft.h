@@ -21,13 +21,14 @@
 
 ************************************************************************/
 
+// Enhanced: Beichen Chen and Amy Chen 4 Dec 2017
+
 #ifndef _FFT_H
 #define _FFT_H
 
 // Definitions
 #define N_WAVE      1024    // full length of Sinewave[]
 #define LOG2_N_WAVE 10      // log2(N_WAVE)
-
 
 // Function prototypes
 void fix_fft(short fr[], short fi[], short m);

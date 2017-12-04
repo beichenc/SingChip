@@ -25,7 +25,6 @@ int fft_sample_rate = 4000;
 const int fft_size = 1024;
 short amplitudeList[1024];
 short imaginaryList[1024];
-int hanning_factor = 32768;
 // char twinkleSong[7];
 // // TODO: Verify this value
 // short backgroundSound = 50;
@@ -42,22 +41,15 @@ void initspi(void) {
     char junk;
     SPI1CON = 0;
     SPI1CONCLR = 0x8000; // ON = bit 15 (16e bit)
-    SPI1CONCLR = 0x800; //32 bits data = bit 11 (12e bit)
-    SPI1CONSET = 0x400; //16 bits data = bit 10 (11e bit)
-    //SPI2CONSET = 0x1000; //SDO2 off (read only) bit 12
+    SPI1CONCLR = 0x800; // 32 bits data = bit 11 (12e bit)
+    SPI1CONSET = 0x400; // 16 bits data = bit 10 (11e bit)
     junk = SPI1BUF;
-    //SPI1BRG = 249; // 10000Hz (sets of 16-bit data per second)
     SPI1BRG = 8; // 4.7Mhz, större SPI1BRG fungerar inte - varför?
     // SPI1BRG = 7 // 5.3 Mhz
     SPI1CONSET = 0x20; // MSTEN = bit 5 (6e bit)
     SPI1CONSET = 0x100; // CKE = bit 8 (9e bit)
-    SPI1STATCLR = 0x40; //Clear SPIROV bit, bit 6
-    // SPI2CONSET = 0x80; //SSEN bit 7
+    SPI1STATCLR = 0x40; // Clear SPIROV bit, bit 6
     SPI1CONSET = 0x8000; // ON = bit 15 (16e bit)
-
-    // Configure RB2 to digital
-    //AD1PCFGSET = 0x4; //redan klart i main
-
     // Configure RB2 to output (Connected to SS2)
     TRISBCLR = 0x4;
     PORTBSET = 0x4;
@@ -73,23 +65,15 @@ void labinit( void)
     TRISDSET = 0xFE0;
     T2CONSET = (0 << 15); //Slå av timer
     TMR2 = 0;
-    // /*bits 4-6 bestämmer prescale, 1:64 har värdet 110, 1:256 har värdet 111.
-    // Med prescale 1:64 blir perioden för stor (17 bitar, dvs 1 bit för mycket) */
-    //T2CON = (2 << 4); //1:256
-    //PR2 = 31250;
     T2CONCLR = (7 << 4);
-    //Period of 0.000125 ms (8000Hz)
-    //PR2 = 10000;
     PR2 = 20000; // 4000Hz
     IECSET(0) = (1 << 8); //enable the timer 2 interrupt (bit 8)
     IPCSET(2) = 0xC; //Pirority 3 (bits 2-4)
     IECSET(0) = (1 << 19);
     IPCSET(4) = (0x3 << 10);
-    // // asm volatile("ei"); //enable interrupts on the microcontroller
     T2CONSET = (1 << 15);
     //Calling the function enable_interrupt in labwork.S
     enable_interrupt();
-    // asm volatile("ei");
     initspi();
     return;
 }
@@ -109,6 +93,7 @@ void labinit( void)
       return maxindex;
   }
 
+  // Function found online and modified to operate on arrays.
   void squareroot(short* realList, short* imaginaryList, short* fftOutput){
     int i;
     short num;
@@ -135,43 +120,8 @@ void labinit( void)
     }
   }
 
-  // void squareroot(short* realList, short* imaginaryList, short* fftOutput){
-  //   // Now we find the square root of realNumbers[k] using a very
-  //           // fast (but compiler dependent) integer approximation:
-  //           // (adapted from: http://www.codecodex.com/wiki/Calculate_an_integer_square_root)
-  //     long place;
-	// 		long root;
-  //     int k;
-  //     for(k = 0; k < fft_size/2; k++){
-  //       place = 0x40000000;
-  // 			root = 0;
-  //       fftOutput[k] = (realList[k] * realList[k] + imaginaryList[k] * imaginaryList[k]);
-  //       if (fftOutput[k] >= 0) // Ensure we don't have a negative number
-  // 			{
-  // 				while (place > fftOutput[k]) place = place >> 2;
-  //
-  // 				while (place)
-  // 				{
-  // 					if (fftOutput[k] >= root + place)
-  // 					{
-  // 						fftOutput[k] -= root + place;
-  // 						root += place * 2;
-  // 					}
-  // 					root = root >> 1;
-  // 					place = place >> 2;
-  // 				}
-  // 			}
-  // 			fftOutput[k] = root;
-  //     }
-  // }
-
 void save(short amplitude, int index, short* amplitudeList) {
     *(amplitudeList+index) = amplitude;
-    short amplitude2 = *(amplitudeList+index);
-    if(amplitude==amplitude2){
-      // display_string(1, itoaconv(amplitude));
-      // display_update();
-    }
 }
 
 // // A valid tone is one that follows an empty (background sound) or different tone, and is not background sound
@@ -217,23 +167,42 @@ void do_fft(short* amplitudeList) {
     //Applicera Hanning window på amplitudelist
     int i;
     for (i = 0; i < fft_size; i++) {
-        //amplitudeList[i] = hanning[i] * amplitudeList[i] / hanning_factor;
         amplitudeList[i] = hanning[i] * amplitudeList[i];
     }
 
     // Använd bibliotek
-    //fix_fft(amplitudeList, imaginaryList, 10);
     gst_spectrum_fix_fft(amplitudeList, imaginaryList, 10, 0);
 
     //Pytagoras sats på den nya amplitudeList och imaginaryList
     short fftOutput[fft_size/2];
     squareroot(amplitudeList, imaginaryList, fftOutput);
+
     // Ta max av amplitudeList, ta ut index och räkna ut frekvens.
     int indexOfMax = maximum(fftOutput);
     int frequency = indexOfMax*fft_sample_rate/fft_size;
+    // char freqstr[6] = "Freq: ";
+    // char freqline[9];
+    // int a;
+    // for (a = 0; a < 9; a++) {
+    //     if (a < 6) {
+    //         freqline[a] = freqstr[a];
+    //     } else {
+    //         freqline[a] = itoaconv(frequency)[a-6];
+    //     }
+    // }
     display_string(3, itoaconv(frequency));
 
     freqToTone(frequency, tone);
+    // char tonestr[6] = "Tone: ";
+    // char toneline[9];
+    // int j;
+    // for (j = 0; j < 9; j++) {
+    //     if (j < 6) {
+    //         toneline[j] = tonestr[j];
+    //     } else {
+    //         toneline[j] = tone[j-6];
+    //     }
+    // }
     display_string(2, tone);
     display_update();
 
@@ -248,21 +217,6 @@ void do_fft(short* amplitudeList) {
     //     return;
     // } else {
     //     toneIndex++;
-    // }
-
-
-    // int i;
-    // int max = 0;
-    // int maxindex;
-    // // Kollar upp till size, då vi redan har halverat listan innan vi skickat in,
-    // //då får vi vår max frekvens (Nyqvist frekvens).
-    // for (i = 0; i < fft_size/2; i++) {
-    //     //display_string(2, itoaconv(i));
-    //     //display_update();
-    //     if (fftOutput[i] > max) {
-    //         max = fftOutput[i];
-    //         maxindex = i;
-    //     }
     // }
 }
 
@@ -338,22 +292,18 @@ void user_isr( void) {
         while(!(SPI1STAT & 0x08));
         SPI1BUF = 'S';
         PORTBCLR = 0x4; // Set SS1 to 0
-        while((SPI1STAT & (1 << 11)) && !(SPI1STAT & 1)); //While SPI2 is busy and receive buffer not full
+        while((SPI1STAT & (1 << 11)) && !(SPI1STAT & 1)); // While SPI2 is busy and receive buffer not full
         received = SPI1BUF;
         PORTBSET = 0x4; // Set SS1 to 1
-        //received = 42; // Testing, but this gives same speed as with SPI so nothing wrong with SPI baud rate
       if(timeoutcount == fft_size){
           number_of_ffts_done++;
-          display_string(0, itoaconv(number_of_ffts_done));
-          display_update();
+          // display_string(0, itoaconv(number_of_ffts_done));
+          // display_update();
           // Sample array full - Time to do FFT
         do_fft(amplitudeList);
         IFSCLR(0) = 0x100;
         timeoutcount = 0;
       } else{
-          // display_string(2, "NOT full");
-          // display_string(3, itoaconv(timeoutcount));
-          // display_update();
           // Save to sample array
           // TODO: What was the benefit of using static instead of global?
           save(received, timeoutcount, amplitudeList);

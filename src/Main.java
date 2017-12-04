@@ -13,7 +13,8 @@ public class Main {
         PlayWav player = new PlayWav();
 
         try {
-            player.play();
+            //player.play();
+            player.playWithVolumeControl();
         } catch (Exception e){
             System.out.println(e.getMessage());
         }
