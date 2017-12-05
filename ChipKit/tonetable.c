@@ -1,9 +1,15 @@
-// Written by Beichen Chen and Amy Chen 4 Dec 2017
+/* tonetable.c
+
+   This file written 2017 by Beichen Chen and Amy Chen
+
+   For copyright and licensing, see file COPYING */
+// TODO: Check copyrights, I mean, there's absolutely no code in this file not written by us only.
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 
 char *name[12] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
+// Function found online but own complementary functions below needed to extract decimal value of needed precision.
 unsigned int Log2nInt(unsigned int n)
 {
    return (n > 1)? 1 + Log2nInt(n/2): 0;
@@ -16,6 +22,7 @@ double abs(double input) {
     return input;
 }
 
+// Values generated in Java
 double log2nList[12] = {1.0000000000,1.0594630944,1.1224620483,1.1892071150,1.2599210499,
     1.3348398542,1.4142135624,1.4983070769,1.5874010520,1.6817928305,1.7817974363,1.8877486254};
 

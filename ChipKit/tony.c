@@ -1,31 +1,24 @@
-/* mipslabwork.c
+/* tony.c
 
-   This file written 2015 by F Lundevall
-   Updated 2017-04-21 by F Lundevall
-
-   This file should be changed by YOU! So you must
-   add comment(s) here with your name(s) and date(s):
-
-   This file modified 2017-10-08 by Amy Chen & Beichen Chen
+   This file written 2017 by Beichen Chen and Amy Chen
 
    For copyright and licensing, see file COPYING */
+   // TODO: Check copyrights, I mean, there's absolutely no code in this file not written by us only.
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
-#include "mipslab.h"  /* Declatations for these labs */
+#include "headers.h"  /* Declatations for these labs */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include "fft.h"
 
-int mytime = 0x5957;
+// TODO: Refactor global variables
 int timeoutcount = 0;
-int prime = 1234567;
 int fft_sample_rate = 4000;
 const int fft_size = 1024;
 short amplitudeList[1024];
 short imaginaryList[1024];
-// char twinkleSong[7];
 // // TODO: Verify this value
 // short backgroundSound = 50;
 // char toneList[7][];
@@ -58,8 +51,7 @@ void initspi(void) {
     ODCB = 0x0;
 }
 
-/* Lab-specific initialization goes here */
-void labinit( void)
+void initchip( void)
 {
     volatile int *trise = (volatile int*) 0xbf886100;
     *trise = *trise & 0xffffff00;
@@ -226,66 +218,47 @@ void do_fft(short* amplitudeList) {
 //     // TODO: Change later to match max size
 //     int size = 7;
 //     int i;
-//     for (i = 0; i < size; i++) {
-//         if (toneList[i] != twinkleSong[i]) {
-//             return -1;
+//     // TODO: make constant for songLibrary size - what is best practice?
+//     for (i = 0; i < 2; i++) {
+//         for (j = 0; j < size; j++) {
+//             if (toneList[j] != songLibrary[i][j+1]) {
+//                 break;
+//             }
+//
+//             // När man godkänt sista tonen
+//             // TODO: kolla att det inte finns flera toner efter detta, dvs. skilt från 0/C0.
+//             if (j == size-1) {
+//                 return i;
+//             }
 //         }
 //     }
-//     // TODO: Change to return the right song later.
-//     return 1;
+//
+//     return -1;
 // }
+
+char *strcpy(char *dest, const char *src)
+{
+   char *save = dest;
+   while(*dest++ = *src++);
+   return save;
+}
 
 /* This function is called repetitively from the main program */
 //void labwork(void) {
-int labwork( void ) {
-    // IF START knapp tryckt -> while (stop knapp != 1)
-  //listen();
+int tony( void ) {
+    // IF START knapp tryckt -> Enable interrupts?
+    // while (stop knapp != 1)
 
-  // Stop knapp == 1 -> start comparing toneList to our database. Get back an int that corresponds to a song.
+  // Stop knapp == 1 -> Disable interrupts? start comparing toneList to our database. Get back an int that corresponds to a song.
+  // int songIndex = identify(toneList);
+  // // TODO: set max characters for name. now 10.
+  // char *songName[10];
+  // strcpy(songName, songLibrary[songIndex][0]);
+  // display_string(2, songName);
   // -1 -> Not found
   // If -1 -> display not found. otherwise display song name.
   return 1;
 }
-
-/* Interrupt Service Routine */
-// void user_isr( void ) {
-//   if(IFS(0) & (1 << 8)){
-//       // SPI
-//       while(!(SPI1STAT & 0x08));
-//       SPI1BUF = 'S';
-//       PORTBCLR = 0x4; // Set SS1 to 0
-//       while((SPI1STAT & (1 << 11)) && !(SPI1STAT & 1)); //While SPI2 is busy and receive buffer not full
-//       received = SPI1BUF;
-//       PORTBSET = 0x4; // Set SS1 to 1
-//
-//     if(timeoutcount == 2048){
-//         number_of_ffts_done++;
-//         display_string(2, "Full");
-//         display_string(0, itoaconv(number_of_ffts_done));
-//         display_update();
-//         // Sample array full - Time to do FFT
-//       do_fft(amplitudeList);
-//       display_string(3, "FFT done");
-//       display_update();
-//       IFSCLR(0) = 0x100;
-//       timeoutcount = 0;
-//
-//     } else{
-//         display_string(2, "NOT full");
-//         display_update();
-//         // Save to sample array
-//         // TODO: What was the benefit of using static instead of global?
-//         save(received, timeoutcount, amplitudeList);
-//
-//       IFSCLR(0) = 0x100;
-//       timeoutcount = timeoutcount + 1 ;
-//     }
-//   }
-//   if(IFS(0) & (1 << 19)){
-//     PORTE = PORTE + 1;
-//     IFSCLR(0) = 0x80000;
-//   }
-// }
 
 /* Interrupt Service Routine */
 void user_isr( void) {
@@ -299,8 +272,6 @@ void user_isr( void) {
         PORTBSET = 0x4; // Set SS1 to 1
       if(timeoutcount == fft_size){
           number_of_ffts_done++;
-          // display_string(0, itoaconv(number_of_ffts_done));
-          // display_update();
           // Sample array full - Time to do FFT
         do_fft(amplitudeList);
         IFSCLR(0) = 0x100;

@@ -1,0 +1,2 @@
+songlibrary.c.o: songlibrary.c
+songlibrary.c :

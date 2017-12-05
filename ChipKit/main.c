@@ -9,7 +9,7 @@
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
-#include "mipslab.h"  /* Declatations for these labs */
+#include "headers.h"  /* Declatations for these labs */
 
 int main(void) {
         /*
@@ -60,18 +60,17 @@ int main(void) {
 
 	display_image(96, icon);
 
-	labinit(); /* Do any lab-specific initialization */
-	//int *amplitudeList = malloc((n-1)*sizeof(int));
+	initchip();
 
+	// TODO: finalize
 	while( 1 )
 	{
 		//labwork();
 
-	  int isContinue = labwork(); /* Do lab-specific things again and again */
+	  int isContinue = tony();
 	  if (isContinue == 0) {
 		  break;
 	  }
-	  //test();
 	}
 	return 0;
 }

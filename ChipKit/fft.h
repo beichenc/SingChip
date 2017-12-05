@@ -19,9 +19,10 @@
 
 	Email: simon.inns@gmail.com
 
+    Enhanced: Beichen Chen and Amy Chen 4 Dec 2017
+
 ************************************************************************/
 
-// Enhanced: Beichen Chen and Amy Chen 4 Dec 2017
 
 #ifndef _FFT_H
 #define _FFT_H
@@ -33,8 +34,10 @@
 // Function prototypes
 void fix_fft(short fr[], short fi[], short m);
 int gst_spectrum_fix_fft (short fr[], short fi[], int m, int inverse);
-extern short gst_spectrum_Sinewave[N_WAVE];     /* placed at end of this file for clarity */
-extern double hanning[N_WAVE];     /* placed at end of this file for clarity */
+extern short gst_spectrum_Sinewave[N_WAVE];
 static short gst_spectrum_fix_mpy (short a, short b);
+
+// Added: Beichen Chen and Amy Chen 4 Dec 2017
+extern double hanning[N_WAVE];
 
 #endif

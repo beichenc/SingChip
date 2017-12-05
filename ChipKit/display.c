@@ -6,7 +6,7 @@
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
-#include "mipslab.h"  /* Declatations for these labs */
+#include "headers.h"  /* Declatations for these labs */
 
 /* Declare a helper function which is local to this file */
 static void num32asc( char * s, int );
@@ -30,41 +30,6 @@ static void num32asc( char * s, int );
 void quicksleep(int cyc) {
 	int i;
 	for(i = cyc; i > 0; i--);
-}
-
-/* tick:
-   Add 1 to time in memory, at location pointed to by parameter.
-   Time is stored as 4 pairs of 2 NBCD-digits.
-   1st pair (most significant byte) counts days.
-   2nd pair counts hours.
-   3rd pair counts minutes.
-   4th pair (least significant byte) counts seconds.
-   In most labs, only the 3rd and 4th pairs are used. */
-void tick( unsigned int * timep )
-{
-  /* Get current value, store locally */
-  register unsigned int t = * timep;
-  t += 1; /* Increment local copy */
-
-  /* If result was not a valid BCD-coded time, adjust now */
-
-  if( (t & 0x0000000f) >= 0x0000000a ) t += 0x00000006;
-  if( (t & 0x000000f0) >= 0x00000060 ) t += 0x000000a0;
-  /* Seconds are now OK */
-
-  if( (t & 0x00000f00) >= 0x00000a00 ) t += 0x00000600;
-  if( (t & 0x0000f000) >= 0x00006000 ) t += 0x0000a000;
-  /* Minutes are now OK */
-
-  if( (t & 0x000f0000) >= 0x000a0000 ) t += 0x00060000;
-  if( (t & 0x00ff0000) >= 0x00240000 ) t += 0x00dc0000;
-  /* Hours are now OK */
-
-  if( (t & 0x0f000000) >= 0x0a000000 ) t += 0x06000000;
-  if( (t & 0xf0000000) >= 0xa0000000 ) t = 0;
-  /* Days are now OK */
-
-  * timep = t; /* Store new value */
 }
 
 /* display_debug
@@ -194,55 +159,6 @@ static void num32asc( char * s, int n )
 }
 
 /*
- * nextprime
- *
- * Return the first prime number larger than the integer
- * given as a parameter. The integer must be positive.
- */
-#define PRIME_FALSE   0     /* Constant to help readability. */
-#define PRIME_TRUE    1     /* Constant to help readability. */
-int nextprime( int inval )
-{
-   register int perhapsprime = 0; /* Holds a tentative prime while we check it. */
-   register int testfactor; /* Holds various factors for which we test perhapsprime. */
-   register int found;      /* Flag, false until we find a prime. */
-
-   if (inval < 3 )          /* Initial sanity check of parameter. */
-   {
-     if(inval <= 0) return(1);  /* Return 1 for zero or negative input. */
-     if(inval == 1) return(2);  /* Easy special case. */
-     if(inval == 2) return(3);  /* Easy special case. */
-   }
-   else
-   {
-     /* Testing an even number for primeness is pointless, since
-      * all even numbers are divisible by 2. Therefore, we make sure
-      * that perhapsprime is larger than the parameter, and odd. */
-     perhapsprime = ( inval + 1 ) | 1 ;
-   }
-   /* While prime not found, loop. */
-   for( found = PRIME_FALSE; found != PRIME_TRUE; perhapsprime += 2 )
-   {
-     /* Check factors from 3 up to perhapsprime/2. */
-     for( testfactor = 3; testfactor <= (perhapsprime >> 1) + 1; testfactor += 1 )
-     {
-       found = PRIME_TRUE;      /* Assume we will find a prime. */
-       if( (perhapsprime % testfactor) == 0 ) /* If testfactor divides perhapsprime... */
-       {
-         found = PRIME_FALSE;   /* ...then, perhapsprime was non-prime. */
-         goto check_next_prime; /* Break the inner loop, go test a new perhapsprime. */
-       }
-     }
-     check_next_prime:;         /* This label is used to break the inner loop. */
-     if( found == PRIME_TRUE )  /* If the loop ended normally, we found a prime. */
-     {
-       return( perhapsprime );  /* Return the prime we found. */
-     }
-   }
-   return( perhapsprime );      /* When the loop ends, perhapsprime is a real prime. */
-}
-
-/*
  * itoa
  *
  * Simple conversion routine
@@ -321,44 +237,4 @@ char * itoaconv( int num )
   /* Since the loop always sets the index i to the next empty position,
    * we must add 1 in order to return a pointer to the first occupied position. */
   return( &itoa_buffer[ i + 1 ] );
-}
-
-char * itoaconv_unsigned( unsigned int num )
-{
-  register int i, sign;
-  static char itoa_buffer[ ITOA_BUFSIZ ];
-  // static const char maxneg[] = "-2147483648";
-
-  itoa_buffer[ ITOA_BUFSIZ - 1 ] = 0;   /* Insert the end-of-string marker. */
-  // sign = num;                           /* Save sign. */
-  // if( num < 0 && num - 1 > 0 )          /* Check for most negative integer */
-  // {
-  //   for( i = 0; i < sizeof( maxneg ); i += 1 )
-  //   itoa_buffer[ i + 1 ] = maxneg[ i ];
-  //   i = 0;
-  // }
-  // else
-  // {
-  //   if( num < 0 ) num = -num;           /* Make number positive. */
-    i = ITOA_BUFSIZ - 2;                /* Location for first ASCII digit. */
-    do {
-      itoa_buffer[ i ] = num % 2 + '0';/* Insert next digit. */
-      num = num / 2;                   /* Remove digit from number. */
-      i -= 1;                           /* Move index to next empty position. */
-    } while( num > 0 );
-    // if( sign < 0 )
-    // {
-    //   itoa_buffer[ i ] = '-';
-    //   i -= 1;
-  //   }
-  // }
-  /* Since the loop always sets the index i to the next empty position,
-   * we must add 1 in order to return a pointer to the first occupied position. */
-  int j;
-  static char itoa_buffer_sixteen[17];
-  itoa_buffer_sixteen[16] = 0;
-  for (j = 0; j < 16; j++) {
-	  itoa_buffer_sixteen[j] = itoa_buffer[i+1];
-  }
-  return( &itoa_buffer_sixteen[0] );
 }

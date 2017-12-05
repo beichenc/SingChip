@@ -40,12 +40,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.DataLine;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.*;
 
 /*	If the compilation fails because this class is not available,
 	get gnu.getopt from the URL given in the comment below.
@@ -128,14 +123,22 @@ public class OscillatorPlayer
         }
     }
 
+    public float[] getFrequencyList(String[] tonesList) {
+        float frequencyList[] = new float[tonesList.length];
+        for (int i = 0; i < tonesList.length; i++) {
+            frequencyList[i] = tonesMap.get(tonesList[i]);
+        }
+        return frequencyList;
+    }
 
-
-    public void play()
-            throws	Exception
+    public void play() throws Exception
     {
+        // TODO: make song library
+        float blinka[] = getFrequencyList(new String[]{"C4","C4","G4","G4","A4","A4","G4"});
 
-        float blinka[] = new float[]{tonesMap.get("C4"), tonesMap.get("C4"), tonesMap.get("G4"), tonesMap.get("G4"),
-            tonesMap.get("A4"), tonesMap.get("A4"), tonesMap.get("G4")};
+        float rudolf[] = getFrequencyList(new String[]{"G4", "A4", "G4", "E4", "C5", "A4", "G4"});
+        // TODO: finish volume
+        float rudolfVolume[] = new float[]{0,0,0,0,-4.0F,0,0};
 
         byte[]		abData;
         AudioFormat	audioFormat;
@@ -144,7 +147,7 @@ public class OscillatorPlayer
         float	fSignalFrequency = 390.0F;
         float	fAmplitude = 0.7F;
 
-        for (int i = 0; i < blinka.length; i++) {
+        for (int i = 0; i < rudolf.length; i++) {
 
             /*
              *	Parsing of command-line options takes place...
@@ -188,13 +191,13 @@ public class OscillatorPlayer
                 }
             }
 
-            System.out.println(blinka[i]);
+            System.out.println(rudolf[i]);
 
             audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
                     fSampleRate, 16, 2, 4, fSampleRate, false);
             AudioInputStream	oscillator = new Oscillator(
                     nWaveformType,
-                    blinka[i],
+                    rudolf[i],
                     fAmplitude,
                     audioFormat,
                     AudioSystem.NOT_SPECIFIED);
@@ -215,6 +218,13 @@ public class OscillatorPlayer
             {
                 e.printStackTrace();
             }
+
+            FloatControl gainControl =
+                    (FloatControl) line.getControl(FloatControl.Type.MASTER_GAIN);
+            if (i == 4) {
+                gainControl.setValue(-4.0f); // Reduce volume by 10 decibels.
+            }
+
             line.start();
 
 
