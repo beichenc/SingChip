@@ -4,7 +4,7 @@
 
    For copyright and licensing, see file COPYING */
    // TODO: Check copyrights, I mean, there's absolutely no code in this file not written by us only.
-   
-char *blinka[] = {"Blinka","C4","C4","G4","G4","A4","A4","G4"};
-char *rudolf[] = {"Rudolf","G4", "A4", "G4", "E4", "C5", "A4", "G4"};
-char **songLibrary[] = {blinka,rudolf};
+
+const char const blinka[12][16] = {"Blinka","C4","C4","G4","G4","A4","A4","G4","0"};
+const char const rudolf[12][16] = {"Rudolf","G4", "A4", "G4", "E4", "C5", "A4", "G4","0"};
+char songLibrary[10][12][16];

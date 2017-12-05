@@ -48,3 +48,8 @@ void time2string( char *, int );
 int getbtns(void);
 int getsw(void);
 void enable_interrupt(void);
+
+// Song library
+extern const char const blinka[12][16];
+extern const char const rudolf[12][16];
+extern char songLibrary[10][12][16];

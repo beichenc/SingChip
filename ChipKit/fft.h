@@ -38,6 +38,7 @@ extern short gst_spectrum_Sinewave[N_WAVE];
 static short gst_spectrum_fix_mpy (short a, short b);
 
 // Added: Beichen Chen and Amy Chen 4 Dec 2017
-extern double hanning[N_WAVE];
+//extern double hanning[N_WAVE];
+extern short hanning[N_WAVE];
 
 #endif

@@ -1,6 +1,4 @@
 .DS_Store
-/.idea
-/out
 ChipKit/*.*.o
 ChipKit/outfile.elf
 ChipKit/outfile.hex
