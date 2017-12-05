@@ -18,7 +18,11 @@ const short song_library_size = 10;
 const short max_name_length = 10;
 const short max_song_length = 10;
 // // TODO: Verify this value
-const short backgroundSound = 50;
+const short backgroundSound = 100;
+const short hanning_factor = 32768;
+
+// Change global values?
+int toneIndex = 0;
 char toneList[10][16];
 
 // TODO: Use volatile values?
@@ -61,6 +65,7 @@ void initchip( void)
     //Calling the function enable_interrupt in labwork.S
     enable_interrupt();
     initspi();
+    init_songLibrary();
     return;
 }
 
@@ -116,6 +121,8 @@ int getValidTone(short frequency, char* tone, int toneIndex) {
     // We ignore background sound, but this is an indicator that it's time to listen for a new tone.
     if (frequency < backgroundSound) {
         newTone = 1;
+        display_string(1, "background");
+        display_update();
         return 0;
     }
 
@@ -123,16 +130,22 @@ int getValidTone(short frequency, char* tone, int toneIndex) {
 
     // If toneIndex is 0, save, so we don't get index out of bounds error in next if.
     if (toneIndex == 0) {
+        display_string(1, "first tone");
+        display_update();
         newTone = 0;
         return 1;
     }
 
     // If it's a new tone (e.g. one separated from previous by empty sound), it's valid.
     if (newTone == 1) {
+        display_string(1, "new tone");
+        display_update();
         newTone = 0;
         return 1;
     }
 
+    display_string(1, "same tone");
+    display_update();
     // Same tone as previously without any empty tone in between
     return 0;
 }
@@ -154,7 +167,7 @@ void do_fft(short* amplitudeList) {
     //Applicera Hanning window på amplitudelist
     int i;
     for (i = 0; i < fft_size; i++) {
-        amplitudeList[i] = hanning[i] * amplitudeList[i];
+        amplitudeList[i] = hanning[i] * amplitudeList[i] / hanning_factor;
     }
 
     // Använd bibliotek
@@ -195,25 +208,27 @@ void do_fft(short* amplitudeList) {
     display_update();
 
     // Check validity of frequency and save if valid
-    static int toneIndex = 0;
     int validTone = getValidTone(frequency, tone, toneIndex);
-    if (validTone) {
+    if (validTone == 1) {
         saveFrequencyAsTone(tone, toneIndex);
+        toneIndex++;
     }
     // Tone sequence full - we ignore all values and wait for stop button to be pressed
-    if (toneIndex == 10) {
-        display_string(3, "You played too much! LOL");
+    if (toneIndex == max_song_length) {
+        display_string(3, "U played 2 much! LOL");
+        display_update();
         return;
-    } else {
-        toneIndex++;
     }
 }
 
 // TODO: Make sure this works for the shorter array aswell
 short length(char (*toneList)[max_song_length+2]) {
     short i = 0;
+    display_string(0, toneList[8]);
+    display_update();
     // End of array marker
-    while (toneList[i][0] != '0' && sizeof(toneList[i]) == 1) {
+    while (toneList[i][0] != '0') {
+
         i++;
     }
     return i;
@@ -222,15 +237,24 @@ short length(char (*toneList)[max_song_length+2]) {
 int identify() {
     int i, j;
     short tlength = length(toneList);
+    display_string(1, itoaconv(tlength));
+    display_update();
     for (i = 0; i < 2; i++) {
-        if (tlength == length(songLibrary[i])-2) { // Each song in the library contains two extra elements
+        short slength = length(songLibrary[i]);
+        display_string(2, itoaconv(slength));
+        display_update();
+        if (tlength == slength-2) { // Each song in the library contains two extra elements
             for (j = 0; j < tlength; j++) {
+                display_string(3, itoaconv(j));
+                display_update();
                 if (toneList[j] != songLibrary[i][j+1]) {
                     break;
                 }
 
                 // När man godkänt sista tonen
                 if (j == tlength-1) {
+                    display_string(1, "correct");
+                    display_update();
                     return i;
                 }
             }
@@ -240,11 +264,20 @@ int identify() {
     return -1;
 }
 
+// char *strcpy(char *dest, const char *src)
+// {
+//    char *save = dest;
+//    while(*dest++ = *src++);
+//    return save;
+// }
+
 char *strcpy(char *dest, const char *src)
 {
-   char *save = dest;
-   while(*dest++ = *src++);
-   return save;
+  unsigned i;
+  for (i=0; src[i] != '\0'; ++i)
+    dest[i] = src[i];
+
+  return dest;
 }
 
 /* This function is called repetitively from the main program */
@@ -258,35 +291,45 @@ int tony( void ) {
 void user_isr( void) {
     static short amplitudeList[1024];
     static char received;
-    static short timeoutcount;
+    static short sample_counter;
 
     if(IFS(0) & 0x100){
-        //Button 2
+        //Button 4
         static short started = 0;
-
-        // Start playing
-        if((getbtns() & 1) && started == 0){
-          started = 1;
-        }
-
-        // Stop playing and identify song
-        if ((getbtns() & 1) && started == 1) {
-            started = 0;
-            // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
-            int songIndex = identify();
-            if (songIndex == -1) {
-                display_string(2, "Not found");
+        static short button_counter = 0;
+        if ((getbtns() & (1 << 2)) && button_counter > 1000) {
+            button_counter = 0;
+            // Start playing
+            if (started == 0) {
+                display_string(2, "starting");
+                display_string(3, itoaconv(started));
+                display_update();
+                started = 1;
             } else {
-                short max_name_length = 10;
-                char songName[max_name_length];
-                strcpy(songName, songLibrary[songIndex][0]);
-                display_string(2, songName);
-            }
-            int i;
-            for (i = 0; i < max_song_length; i++) {
-                strcpy(toneList[i],"0");
+                display_string(2, "stopping");
+                display_string(3, itoaconv(started));
+                display_update();
+                // Stop playing and identify song
+                started = 0;
+                // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
+                int songIndex = identify();
+                if (songIndex == -1) {
+                    //display_string(2, "Not found");
+                } else {
+                    char songName[max_name_length];
+                    strcpy(songName, songLibrary[songIndex][0]);
+                    display_string(2, songName);
+                }
+                display_update();
+                toneIndex = 0;
+                int i;
+                for (i = 0; i < max_song_length; i++) {
+                    strcpy(toneList[i],"0");
+                }
             }
         }
+
+        button_counter++;
 
         if (started == 1) {
             // SPI
@@ -296,17 +339,17 @@ void user_isr( void) {
             while((SPI1STAT & (1 << 11)) && !(SPI1STAT & 1)); // While SPI2 is busy and receive buffer not full
             received = SPI1BUF;
             PORTBSET = 0x4; // Set SS1 to 1
-          if(timeoutcount == fft_size){
+          if(sample_counter == fft_size){
               // Sample array full - Time to do FFT
             do_fft(amplitudeList);
             IFSCLR(0) = 0x100;
-            timeoutcount = 0;
+            sample_counter = 0;
           } else{
               // Save to sample array
               // TODO: What was the benefit of using static instead of global?
-              save(received, timeoutcount, amplitudeList);
+              save(received, sample_counter, amplitudeList);
             IFSCLR(0) = 0x100;
-            timeoutcount = timeoutcount + 1;
+            sample_counter = sample_counter + 1;
           }
       } else {
           IFSCLR(0) = 0x100;

@@ -5,6 +5,9 @@
 - Fix tab lengths
 - Put all global stuff in some kind of initialize?
 
-
+### Frågor
 - Ha button i interrupt eller i while?
 - kan toneList få vara global?
+- length av array av array
+- Initiera array som är array av array av array (songLibrary);
+- button weird
