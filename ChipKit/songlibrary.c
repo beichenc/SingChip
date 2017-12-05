@@ -5,15 +5,15 @@
    For copyright and licensing, see file COPYING */
    // TODO: Check copyrights, I mean, there's absolutely no code in this file not written by us only.
 
-const char const blinka[12][16] = {"Blinka","7","C4","C4","G4","G4","A4","A4","G4"};
-const char const rudolf[12][16] = {"Rudolf","7","G4", "A4", "G4", "E4", "C5", "A4", "G4"};
-char songLibrary[10][12][16];
+const char const blinka[12][9] = {"Blinka","7","C4","C4","G4","G4","A4","A4","G4"};
+const char const rudolf[12][9] = {"Rudolf","7","G4", "A4", "G4", "E4", "C5", "A4", "G4"};
+char songLibrary[10][12][9];
 
 // TODO: MUST REWRITE!
 void init_songLibrary(void) {
     int j;
     short max_song_length = 10;
-    short max_name_length = 16;
+    short max_name_length = 9;
     short song_library_size = 2; // Current size
     for (j = 0; j < max_song_length+2; j++) {
         strcpy(songLibrary[0][j],blinka[j]);

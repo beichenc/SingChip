@@ -11,3 +11,8 @@
 - length av array av array
 - Initiera array som är array av array av array (songLibrary);
 - button weird
+- hantera tillstånd då knapparna slutar göra något
+
+
+### Volym
+3 bars på datorn, rudolf C5 sänkt -5.0F

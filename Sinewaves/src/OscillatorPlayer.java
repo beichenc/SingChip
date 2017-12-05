@@ -147,7 +147,7 @@ public class OscillatorPlayer
         float	fSignalFrequency = 390.0F;
         float	fAmplitude = 0.7F;
 
-        for (int i = 0; i < rudolf.length; i++) {
+        for (int i = 0; i < blinka.length; i++) {
 
             /*
              *	Parsing of command-line options takes place...
@@ -191,13 +191,13 @@ public class OscillatorPlayer
                 }
             }
 
-            System.out.println(rudolf[i]);
+            System.out.println(blinka[i]);
 
             audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
                     fSampleRate, 16, 2, 4, fSampleRate, false);
             AudioInputStream	oscillator = new Oscillator(
                     nWaveformType,
-                    rudolf[i],
+                    blinka[i],
                     fAmplitude,
                     audioFormat,
                     AudioSystem.NOT_SPECIFIED);
@@ -221,7 +221,13 @@ public class OscillatorPlayer
 
             FloatControl gainControl =
                     (FloatControl) line.getControl(FloatControl.Type.MASTER_GAIN);
-            if (i == 4) {
+            // Rudolf
+            /*if (i == 4) {
+                gainControl.setValue(-5.0f); // Reduce volume by 10 decibels.
+            }*/
+
+            // Blinka
+            if (i == 4 || i == 5) {
                 gainControl.setValue(-4.0f); // Reduce volume by 10 decibels.
             }
 

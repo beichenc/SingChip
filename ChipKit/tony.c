@@ -23,7 +23,7 @@ const short hanning_factor = 32768;
 
 // Change global values?
 int toneIndex = 0;
-char toneList[10][16];
+char toneList[10][9];
 short started = 0;
 
 // TODO: Use volatile values?
@@ -122,8 +122,6 @@ int getValidTone(short frequency, char* tone) {
     // We ignore background sound, but this is an indicator that it's time to listen for a new tone.
     if (frequency < backgroundSound) {
         newTone = 1;
-        display_string(1, "background");
-        display_update();
         return 0;
     }
 
@@ -131,22 +129,16 @@ int getValidTone(short frequency, char* tone) {
 
     // If toneIndex is 0, save, so we don't get index out of bounds error in next if.
     if (toneIndex == 0) {
-        display_string(1, "first tone");
-        display_update();
         newTone = 0;
         return 1;
     }
 
     // If it's a new tone (e.g. one separated from previous by empty sound), it's valid.
     if (newTone == 1) {
-        display_string(1, "new tone");
-        display_update();
         newTone = 0;
         return 1;
     }
 
-    display_string(1, "same tone");
-    display_update();
     // Same tone as previously without any empty tone in between
     return 0;
 }
@@ -194,7 +186,7 @@ void do_fft(short* amplitudeList) {
     // }
     display_string(3, itoaconv(frequency));
 
-    static char tone[4];
+    static char tone[9];
     freqToTone(frequency, tone);
     // char tonestr[6] = "Tone: ";
     // char toneline[9];
@@ -251,20 +243,33 @@ int string2int(char a[]) {
   return n;
 }
 
+// Found online
+int compare_strings(char a[], char b[])
+{
+   int c = 0;
+
+   while (a[c] == b[c]) {
+      if (a[c] == '\0' || b[c] == '\0')
+         break;
+      c++;
+   }
+
+   if (a[c] == '\0' && b[c] == '\0')
+      return 0;
+   else
+      return -1;
+}
+
 int identify() {
     int i, j;
-    short tlength = toneIndex+1;
-    display_string(1, itoaconv(tlength));
-    display_update();
+    short tlength = toneIndex;
     for (i = 0; i < 2; i++) {
         short slength = string2int(songLibrary[i][1]); // Length saved in index 1
-        display_string(2, itoaconv(slength));
-        display_update();
         if (tlength == slength) { // Each song in the library contains two extra elements
             for (j = 0; j < tlength; j++) {
-                display_string(3, itoaconv(j));
+                display_string(3, itoaconv(compare_strings(toneList[j],songLibrary[i][j+2])));
                 display_update();
-                if (toneList[j] != songLibrary[i][j+1]) {
+                if (!(compare_strings(toneList[j],songLibrary[i][j+2]) == 0)) {
                     break;
                 }
 
@@ -300,7 +305,29 @@ char *strcpy(char *dest, const char *src)
 /* This function is called repetitively from the main program */
 //void labwork(void) {
 int tony( void ) {
+    if (getbtns() & (1 << 2)) {
+        started = 1;
+    }
 
+    if(getbtns() & (1 << 1)){
+        started = 0;
+        // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
+        int songIndex = identify();
+        if (songIndex == -1) {
+            //display_string(2, "Not found");
+        } else {
+            char songName[max_name_length];
+            strcpy(songName, songLibrary[songIndex][0]);
+            display_string(2, songName);
+        }
+        display_update();
+        toneIndex = 0;
+        int i;
+        for (i = 0; i < max_song_length; i++) {
+            strcpy(toneList[i],"0");
+        }
+        delay(5000);
+    }
   return 1;
 }
 
@@ -311,44 +338,6 @@ void user_isr( void) {
     static short sample_counter;
 
     if(IFS(0) & 0x100){
-        //Button 4 - Start
-        static short button_counter = 0;
-        static short started = 0;
-        if ((getbtns() & (1 << 2)) && button_counter > 1000) {
-            started = 1;
-            button_counter = 0;
-            // Start playing
-            display_string(2, "starting");
-            display_string(3, itoaconv(started));
-            display_update();
-        }
-
-        // Button 3 - Stop
-        if((getbtns() & (1 << 1)) && button_counter > 1000){
-            started = 0;
-            button_counter = 0;
-            display_string(2, "stopping");
-            display_string(3, itoaconv(started));
-            display_update();
-            // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
-            int songIndex = identify();
-            if (songIndex == -1) {
-                //display_string(2, "Not found");
-            } else {
-                char songName[max_name_length];
-                strcpy(songName, songLibrary[songIndex][0]);
-                display_string(2, songName);
-            }
-            display_update();
-            toneIndex = 0;
-            int i;
-            for (i = 0; i < max_song_length; i++) {
-                strcpy(toneList[i],"0");
-            }
-        }
-
-        button_counter++;
-
         if (started == 1) {
             // SPI
             while(!(SPI1STAT & 0x08));
