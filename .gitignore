@@ -1,6 +1,6 @@
 .DS_Store
 /.idea
 /out
-time4int/*.*.o
-time4int/outfile.elf
-time4int/outfile.hex
+ChipKit/*.*.o
+ChipKit/outfile.elf
+ChipKit/outfile.hex
