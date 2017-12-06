@@ -147,6 +147,27 @@ void saveFrequencyAsTone(char* tone) {
     display_update();
 }
 
+void stop(void) {
+    started = 0;
+    // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
+    int songIndex = identify();
+    display_string(3, itoaconv(songIndex));
+    if (songIndex == -1) {
+        display_string(2, "Much wrong");
+    } else {
+        char songName[MAX_NAME_LENGTH];
+        strcpy(songName, songLibrary[songIndex][0]);
+        display_string(2, songName);
+    }
+    display_update();
+    toneIndex = 0;
+    int i;
+    for (i = 0; i < MAX_SONG_LENGTH; i++) {
+        strcpy(toneList[i],"0");
+    }
+    //delay(5000);
+}
+
 void do_fft(short* amplitudeList) {
     static short imaginaryList[1024];
     // TODO: Behöver vi initialisera alla värden till 0?
@@ -303,25 +324,7 @@ char *strcpy(char *dest, const char *src)
   return dest;
 }
 
-void stop(void) {
-    started = 0;
-    // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
-    int songIndex = identify();
-    if (songIndex == -1) {
-        display_string(2, "Much wrong");
-    } else {
-        char songName[MAX_NAME_LENGTH];
-        strcpy(songName, songLibrary[songIndex][0]);
-        display_string(2, songName);
-    }
-    display_update();
-    toneIndex = 0;
-    int i;
-    for (i = 0; i < MAX_SONG_LENGTH; i++) {
-        strcpy(toneList[i],"0");
-    }
-    //delay(5000);
-}
+
 
 /* This function is called repetitively from the main program */
 //void labwork(void) {
