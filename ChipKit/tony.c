@@ -8,14 +8,14 @@
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 #include "headers.h"  /* Declatations for these labs */
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdio.h> // TODO: are we using this?
+#include <stdlib.h> // TODO: are we using this?
 #include "fft.h"
 
 const short fft_sample_rate = 4000;
 const short fft_size = 1024;
 const short song_library_size = 10;
-const short max_name_length = 10;
+const short max_name_length = 9;
 const short max_song_length = 10;
 // // TODO: Verify this value
 const short backgroundSound = 100;
@@ -314,7 +314,7 @@ int tony( void ) {
         // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
         int songIndex = identify();
         if (songIndex == -1) {
-            //display_string(2, "Not found");
+            display_string(2, "Not found");
         } else {
             char songName[max_name_length];
             strcpy(songName, songLibrary[songIndex][0]);
