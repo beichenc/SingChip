@@ -63,15 +63,9 @@ int main(void) {
 
 	initchip();
 
-	// TODO: finalize
 	while( 1 )
 	{
-		//labwork();
-
-	  int isContinue = tony();
-	  if (isContinue == 0) {
-		  break;
-	  }
+	  tony();
 	}
 	return 0;
 }

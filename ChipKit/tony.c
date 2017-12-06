@@ -20,7 +20,7 @@ const short hanning_factor = 32768;
 
 // Change global values?
 int toneIndex = 0;
-char toneList[10][9];
+char toneList[10][MAX_NAME_LENGTH];
 short started = 0;
 short number_of_saved_songs = 3;
 
@@ -147,6 +147,29 @@ void saveFrequencyAsTone(char* tone) {
     display_update();
 }
 
+void stop(void) {
+    started = 0;
+    // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
+    int songIndex = identify();
+    //display_string(3, itoaconv(songIndex));
+    // display_clear(2);
+    // display_update();
+    if (songIndex == -1) {
+        display_string(2, "Much wrong");
+    } else {
+        display_string(2, songLibrary[songIndex][0]);
+    }
+    display_update();
+    toneIndex = 0;
+    int i;
+    for (i = 0; i < MAX_SONG_LENGTH; i++) {
+        // TODO
+        //strcpy(toneList[i],"0");
+        toneList[i][0] = '\0';
+    }
+    //delay(5000);
+}
+
 void do_fft(short* amplitudeList) {
     static short imaginaryList[1024];
     // TODO: Behöver vi initialisera alla värden till 0?
@@ -185,7 +208,7 @@ void do_fft(short* amplitudeList) {
     // }
     display_string(3, itoaconv(frequency));
 
-    static char tone[9];
+    static char tone[MAX_NAME_LENGTH];
     freqToTone(frequency, tone);
     // char tonestr[6] = "Tone: ";
     // char toneline[9];
@@ -269,7 +292,8 @@ int identify() {
         short slength = string2int(songLibrary[i][1]); // Length saved in index 1
         if (tlength == slength) { // Each song in the library contains two extra elements
             for (j = 0; j < tlength; j++) {
-                display_update();
+                // display_string(3, itoaconv(compare_strings(toneList[j],songLibrary[i][j+2])));
+                // display_update();
                 if (!(compare_strings(toneList[j],songLibrary[i][j+2]) == 0)) {
                     break;
                 }
@@ -303,37 +327,30 @@ char *strcpy(char *dest, const char *src)
   return dest;
 }
 
-void stop(void) {
-    started = 0;
-    // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
-    int songIndex = identify();
-    if (songIndex == -1) {
-        display_string(2, "Much wrong");
-    } else {
-        char songName[MAX_NAME_LENGTH];
-        strcpy(songName, songLibrary[songIndex][0]);
-        display_string(2, songName);
-    }
-    display_update();
-    toneIndex = 0;
-    int i;
-    for (i = 0; i < MAX_SONG_LENGTH; i++) {
-        strcpy(toneList[i],"0");
-    }
-    //delay(5000);
-}
+// void test(void) {
+//     char test[9];
+//     test[0] = 'C';
+//     test[1] = '4';
+//     test[2] = '\0';
+//     char test2[9];
+//     strcpy(test2,"C4");
+//     display_string(1, itoaconv(compare_strings(test,test2)));
+//     display_update();
+//     delay(5000);
+// }
 
-/* This function is called repetitively from the main program */
-//void labwork(void) {
-int tony( void ) {
-    if (getbtns() & (1 << 2)) {
+// This function is called repetitively from the main program
+void tony( void ) {
+    //test();
+    // Starting
+    if (getbtns() & (1 << 2) && started == 0) {
         started = 1;
     }
 
-    if(getbtns() & (1 << 1)){
+    // Stopping
+    if(getbtns() & (1 << 1) && started == 1){
         stop();
     }
-  return 1;
 }
 
 /* Interrupt Service Routine */

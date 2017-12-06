@@ -109,8 +109,6 @@ public class OscillatorPlayer
     public OscillatorPlayer() {
     }
 
-
-
     public void play(Song song) throws Exception
     {
         byte[]		abData;

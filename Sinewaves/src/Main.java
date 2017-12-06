@@ -25,7 +25,7 @@ public class Main {
         Song elise = new Song(new String[]{"E5","D#5","E5","D#5","E5","B4","D5","C5","A4"}, new float[]{-6.0F,-6.0F,-6.0F,-6.0F,-6.0F,-4.0F,-5.0F,-4.0F,-4.0F});
 
         try {
-            player.play(elise);
+            player.play(rudolf);
         } catch (Exception e) {
 
         }
