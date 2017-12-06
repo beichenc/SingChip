@@ -16,9 +16,8 @@ void display_update(void);
 uint8_t spi_send_recv(uint8_t data);
 char * itoaconv( int num );
 
-// Tony.c, the core of this program
-int tony(void);
-//void labwork(void);
+// Tony.c
+void tony(void);
 
 /* Declare display_debug - a function to help debugging.
 
