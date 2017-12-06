@@ -50,6 +50,9 @@ int getsw(void);
 void enable_interrupt(void);
 
 // Song library
-extern const char const blinka[12][9];
-extern const char const rudolf[12][9];
+#define MAX_NAME_LENGTH (9)
+#define MAX_SONG_LENGTH (10)
+#define SONG_LIBRARY_SIZE (10)
+extern char blinka[12][9];
+extern char rudolf[12][9];
 extern char songLibrary[10][12][9];

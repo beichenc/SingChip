@@ -105,41 +105,14 @@ public class OscillatorPlayer
 {
     private static final int	BUFFER_SIZE = 128000;
     private static boolean		DEBUG = false;
-    private HashMap<String, Float> tonesMap;
 
     public OscillatorPlayer() {
-
-        int numberOfTones = 41;
-        float frequencies[] = new float[]{195.998F, 207.652F, 220.000F, 233.082F, 246.942F, 261.626F, 277.183F, 293.665F,
-                311.127F, 329.628F, 349.228F, 369.994F, 391.995F, 415.305F, 440.000F, 466.164F, 493.883F, 523.251F, 554.365F, 587.330F,
-                622.254F, 659.255F, 698.456F, 739.989F, 783.991F, 830.609F, 880.000F, 932.328F, 987.767F, 1046.50F, 1108.73F, 1174.66F,
-                1244.51F, 1318.51F, 1396.91F, 1479.98F, 1567.98F, 1661.22F, 1760.00F, 1864.66F, 1975.53F};
-        String tones[] = new String[]{"G3", "G#3", "A3", "A#3", "B3", "C4", "C#4", "D4", "D#4", "E4", "F4", "F#4", "G4", "G#4", "A4", "A#4", "B4", "C5", "C#5", "D5", "D#5", "E5", "F5", "F#5", "G5", "G#5", "A5", "A#5", "B5", "C6", "C#6", "D6", "D#6", "E6", "F6", "F#6", "G6", "G#6", "A6", "A#6", "B6"};
-        System.out.println(frequencies.length);
-        System.out.println(tones.length);
-        tonesMap = new HashMap<>();
-        for (int i = 0; i < numberOfTones; i++) {
-            tonesMap.put(tones[i],frequencies[i]);
-        }
     }
 
-    public float[] getFrequencyList(String[] tonesList) {
-        float frequencyList[] = new float[tonesList.length];
-        for (int i = 0; i < tonesList.length; i++) {
-            frequencyList[i] = tonesMap.get(tonesList[i]);
-        }
-        return frequencyList;
-    }
 
-    public void play() throws Exception
+
+    public void play(Song song) throws Exception
     {
-        // TODO: make song library
-        float blinka[] = getFrequencyList(new String[]{"C4","C4","G4","G4","A4","A4","G4"});
-
-        float rudolf[] = getFrequencyList(new String[]{"G4", "A4", "G4", "E4", "C5", "A4", "G4"});
-        // TODO: finish volume
-        float rudolfVolume[] = new float[]{0,0,0,0,-4.0F,0,0};
-
         byte[]		abData;
         AudioFormat	audioFormat;
         int	nWaveformType = Oscillator.WAVEFORM_SINE;
@@ -147,7 +120,8 @@ public class OscillatorPlayer
         float	fSignalFrequency = 390.0F;
         float	fAmplitude = 0.7F;
 
-        for (int i = 0; i < blinka.length; i++) {
+        System.out.println(song.getFrequencyList().length);
+        for (int i = 0; i < song.getFrequencyList().length; i++) {
 
             /*
              *	Parsing of command-line options takes place...
@@ -191,13 +165,13 @@ public class OscillatorPlayer
                 }
             }
 
-            System.out.println(blinka[i]);
+            System.out.println(song.getFrequencyList()[i]);
 
             audioFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED,
                     fSampleRate, 16, 2, 4, fSampleRate, false);
             AudioInputStream	oscillator = new Oscillator(
                     nWaveformType,
-                    blinka[i],
+                    song.getFrequencyList()[i],
                     fAmplitude,
                     audioFormat,
                     AudioSystem.NOT_SPECIFIED);
@@ -221,14 +195,9 @@ public class OscillatorPlayer
 
             FloatControl gainControl =
                     (FloatControl) line.getControl(FloatControl.Type.MASTER_GAIN);
-            // Rudolf
-            /*if (i == 4) {
-                gainControl.setValue(-5.0f); // Reduce volume by 10 decibels.
-            }*/
 
-            // Blinka
-            if (i == 4 || i == 5) {
-                gainControl.setValue(-4.0f); // Reduce volume by 10 decibels.
+            if (song.getVolumeList()[i] != 0) {
+                gainControl.setValue(song.getVolumeList()[i]);
             }
 
             line.start();

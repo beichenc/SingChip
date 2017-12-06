@@ -1,2 +1,8 @@
-songlibrary.c.o: songlibrary.c
+songlibrary.c.o: songlibrary.c \
+ /Applications/mcb32tools.app/Contents/Resources/Toolchain/include/stdint.h \
+ /Applications/mcb32tools.app/Contents/Resources/Toolchain/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdint-gcc.h \
+ headers.h
 songlibrary.c :
+ /Applications/mcb32tools.app/Contents/Resources/Toolchain/include/stdint.h :
+ /Applications/mcb32tools.app/Contents/Resources/Toolchain/lib/gcc/mipsel-mcb32-elf/4.9.2/include/stdint-gcc.h :
+ headers.h :

@@ -14,9 +14,6 @@
 
 const short fft_sample_rate = 4000;
 const short fft_size = 1024;
-const short song_library_size = 10;
-const short max_name_length = 9;
-const short max_song_length = 10;
 // // TODO: Verify this value
 const short backgroundSound = 100;
 const short hanning_factor = 32768;
@@ -25,6 +22,7 @@ const short hanning_factor = 32768;
 int toneIndex = 0;
 char toneList[10][9];
 short started = 0;
+short number_of_saved_songs = 3;
 
 // TODO: Use volatile values?
 
@@ -146,6 +144,7 @@ int getValidTone(short frequency, char* tone) {
 void saveFrequencyAsTone(char* tone) {
     strcpy(toneList[toneIndex],tone);
     display_string(1, tone);
+    display_update();
 }
 
 void do_fft(short* amplitudeList) {
@@ -208,9 +207,11 @@ void do_fft(short* amplitudeList) {
         toneIndex++;
     }
     // Tone sequence full - we ignore all values and wait for stop button to be pressed
-    if (toneIndex == max_song_length-1) {
+    if (toneIndex == MAX_SONG_LENGTH) {
+        // TODO: Delay or just exit as if stop button pressed
         display_string(3, "U played 2 much! LOL");
         display_update();
+        stop();
         return;
     }
 }
@@ -263,11 +264,11 @@ int compare_strings(char a[], char b[])
 int identify() {
     int i, j;
     short tlength = toneIndex;
-    for (i = 0; i < 2; i++) {
+    // TODO:
+    for (i = 0; i < number_of_saved_songs; i++) {
         short slength = string2int(songLibrary[i][1]); // Length saved in index 1
         if (tlength == slength) { // Each song in the library contains two extra elements
             for (j = 0; j < tlength; j++) {
-                display_string(3, itoaconv(compare_strings(toneList[j],songLibrary[i][j+2])));
                 display_update();
                 if (!(compare_strings(toneList[j],songLibrary[i][j+2]) == 0)) {
                     break;
@@ -275,7 +276,7 @@ int identify() {
 
                 // När man godkänt sista tonen
                 if (j == tlength-1) {
-                    display_string(1, "correct");
+                    display_string(1, "Wow");
                     display_update();
                     return i;
                 }
@@ -302,6 +303,26 @@ char *strcpy(char *dest, const char *src)
   return dest;
 }
 
+void stop(void) {
+    started = 0;
+    // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
+    int songIndex = identify();
+    if (songIndex == -1) {
+        display_string(2, "Much wrong");
+    } else {
+        char songName[MAX_NAME_LENGTH];
+        strcpy(songName, songLibrary[songIndex][0]);
+        display_string(2, songName);
+    }
+    display_update();
+    toneIndex = 0;
+    int i;
+    for (i = 0; i < MAX_SONG_LENGTH; i++) {
+        strcpy(toneList[i],"0");
+    }
+    //delay(5000);
+}
+
 /* This function is called repetitively from the main program */
 //void labwork(void) {
 int tony( void ) {
@@ -310,23 +331,7 @@ int tony( void ) {
     }
 
     if(getbtns() & (1 << 1)){
-        started = 0;
-        // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
-        int songIndex = identify();
-        if (songIndex == -1) {
-            display_string(2, "Not found");
-        } else {
-            char songName[max_name_length];
-            strcpy(songName, songLibrary[songIndex][0]);
-            display_string(2, songName);
-        }
-        display_update();
-        toneIndex = 0;
-        int i;
-        for (i = 0; i < max_song_length; i++) {
-            strcpy(toneList[i],"0");
-        }
-        delay(5000);
+        stop();
     }
   return 1;
 }

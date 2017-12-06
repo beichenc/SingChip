@@ -56,6 +56,7 @@ int main(void) {
 
 	display_init();
 	display_string(0, "HI I'M TONY :)");
+	display_string(2, "Plz play");
 	display_update();
 
 	display_image(96, icon);

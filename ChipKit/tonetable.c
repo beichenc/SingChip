@@ -66,7 +66,8 @@ void freqToTone(short frequency, char* tone) {
     if (n == 0 || n == 2 || n == 4 || n == 5 || n == 7 || n == 9 || n == 11) {
         tone[0] = name[n][0];
         tone[1] = octave + '0';
-        //tone[2] = ' ';
+        // TODO: Set correct value same as in songLibrary
+        //tone[2] = '\0';
     } else {
         tone[0] = name[n][0];
         tone[1] = name[n][1];

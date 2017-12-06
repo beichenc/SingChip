@@ -5,6 +5,7 @@
 - Fix tab lengths
 - Put all global stuff in some kind of initialize?
 - kolla #define
+- skriv en display_clear
 
 ### Frågor
 - Ha button i interrupt eller i while?
