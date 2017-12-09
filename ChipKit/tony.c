@@ -50,6 +50,7 @@ void initchip( void)
 {
     volatile int *trise = (volatile int*) 0xbf886100;
     *trise = *trise & 0xffffff00;
+    //volatile int *porte = (volatile int*) 0xbf886110;
     PORTESET = 0xffffff00;
     TRISDSET = 0xFE0;
     T2CONSET = (0 << 15); //Slå av timer
@@ -97,6 +98,27 @@ void startOver(void) {
     started = 0;
     clearToneList();
     display_play();
+}
+
+// Tony's lightshow
+void victoryLights(void) {
+    int i;
+    int lightsOff = 0xffffff00;
+    int lightsOn = 0xffffffff;
+    for (i = 0; i < 8; i++) {
+        PORTESET = lightsOff + (1 << i);
+        delay(100);
+    }
+    for (i = 7; i >= 0; i--) {
+        PORTECLR = (1 << i);
+        delay(100);
+    }
+    for (i = 0; i < 3; i++) {
+        PORTESET = lightsOn;
+        delay(100);
+        PORTECLR = 0x000000ff;
+        delay(100);
+    }
 }
 
   int maximum(short* array) {
@@ -258,6 +280,8 @@ void stop(short tooMuch) {
                 display_string(1, "");
                 display_string(2, "Much wrong");
                 display_string(3, "");
+                display_update();
+                display_image(96, icon);
             }
         } else {
             display_string(1, "");
@@ -265,9 +289,10 @@ void stop(short tooMuch) {
             display_update();
             delay(2000);
             display_string(3, songLibrary[songIndex][0]);
+            display_update();
+            display_image(96, icon);
+            victoryLights();
         }
-        display_update();
-        display_image(96, icon);
         clearToneList();
     } else if (mode == TEACHING_MODE) {
         save_to_library();
@@ -431,7 +456,7 @@ void viewSong(short songIndex) {
         if (compare_strings(songLibrary[songIndex][i],"") == 0) {
             return;
         }
-        display_string(1, itoaconv(i));
+        //display_string(1, itoaconv(i));
         display_string(2, songLibrary[songIndex][i+2]);
         display_update();
         delay(800);

@@ -26,7 +26,7 @@ public class Main {
         Song birthday = new Song(new String[]{"C4","C4","D4","C4","F4","E4"}, new float[]{0,0,0,0,0,0});
 
         try {
-            player.play(birthday);
+            player.play(rudolf);
         } catch (Exception e) {
 
         }

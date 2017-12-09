@@ -25,31 +25,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="OscillatorPlayer.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/OscillatorPlayer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1035">
-              <caret line="109" column="5" selection-start-line="109" selection-start-column="5" selection-end-line="109" selection-end-column="5" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Song.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Song.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="285">
-              <caret line="19" column="308" selection-start-line="19" selection-start-column="308" selection-end-line="19" selection-end-column="308" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="24" column="121" selection-start-line="24" selection-start-column="121" selection-end-line="24" selection-end-column="121" />
+            <state relative-caret-position="209">
+              <caret line="24" column="73" selection-start-line="24" selection-start-column="73" selection-end-line="24" selection-end-column="73" />
               <folding />
             </state>
           </provider>
@@ -606,12 +586,12 @@
       <workItem from="1512552498135" duration="4616000" />
       <workItem from="1512587889793" duration="619000" />
       <workItem from="1512588811092" duration="3785000" />
-      <workItem from="1512807628175" duration="10009000" />
+      <workItem from="1512807628175" duration="12817000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="29605000" />
+    <option name="totallyTimeSpent" value="32413000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="26" width="1280" height="727" extended-state="6" />
@@ -795,7 +775,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Song.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
+        <state relative-caret-position="44">
           <caret line="19" column="308" selection-start-line="19" selection-start-column="308" selection-end-line="19" selection-end-column="308" />
           <folding />
         </state>
@@ -803,7 +783,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/OscillatorPlayer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1035">
+        <state relative-caret-position="15">
           <caret line="109" column="5" selection-start-line="109" selection-start-column="5" selection-end-line="109" selection-end-column="5" />
           <folding />
         </state>
@@ -811,8 +791,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="24" column="121" selection-start-line="24" selection-start-column="121" selection-end-line="24" selection-end-column="121" />
+        <state relative-caret-position="209">
+          <caret line="24" column="73" selection-start-line="24" selection-start-column="73" selection-end-line="24" selection-end-column="73" />
           <folding />
         </state>
       </provider>
