@@ -1,0 +1,4 @@
+.DS_Store
+ChipKit/*.*.o
+ChipKit/outfile.elf
+ChipKit/outfile.hex

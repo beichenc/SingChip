@@ -5,11 +5,13 @@
 
    Latest update 2017-04-21 by F Lundevall
 
+   Modified by Beichen Chen and Amy Chen 9 Dec 2017
+
    For copyright and licensing, see file COPYING */
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
-#include "mipslab.h"  /* Declatations for these labs */
+#include "headers.h"  /* Declatations for these labs */
 
 int main(void) {
         /*
@@ -42,32 +44,41 @@ int main(void) {
 	TRISDSET = (1 << 8);
 	TRISFSET = (1 << 1);
 
-	// /* Set up SPI as master */
-	// SPI2CON = 0;
-	// SPI2BRG = 4;
-	// /* SPI2STAT bit SPIROV = 0; */
-	// SPI2STATCLR = 0x40;
-	// /* SPI2CON bit CKP = 1; */
-    //     SPI2CONSET = 0x40;
-	// /* SPI2CON bit MSTEN = 1; */
-	// SPI2CONSET = 0x20;
-	// /* SPI2CON bit ON = 1; */
-	// SPI2CONSET = 0x8000;
+	/* Set up SPI as master */
+	SPI2CON = 0;
+	SPI2BRG = 4;
+	/* SPI2STAT bit SPIROV = 0; */
+	SPI2STATCLR = 0x40;
+	/* SPI2CON bit CKP = 1; */
+    SPI2CONSET = 0x40;
+	/* SPI2CON bit MSTEN = 1; */
+	SPI2CONSET = 0x20;
+	/* SPI2CON bit ON = 1; */
+	SPI2CONSET = 0x8000;
 
-	// display_init();
-	// display_string(0, "KTH/ICT lab");
-	// display_string(1, "in Computer");
-	// display_string(2, "Engineering");
-	// display_string(3, "Welcome!");
-	// display_update();
-	//
-	// display_image(96, icon);
+	display_init();
+	display_string(0, "HI I'M TONY :)");
+	display_menu();
+	display_update();
 
-	labinit(); /* Do any lab-specific initialization */
+	display_image(96, icon);
+
+	initchip();
 
 	while( 1 )
 	{
-	  labwork(); /* Do lab-specific things again and again */
+		while(1) {
+			int isContinue = menu();
+			if (isContinue == 0) {
+				break;
+			}
+		}
+		while(1) {
+			int isContinue = tony();
+			if (isContinue == 0) {
+				break;
+			}
+		}
 	}
 	return 0;
 }
