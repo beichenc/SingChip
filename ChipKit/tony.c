@@ -79,10 +79,17 @@ void display_play(void) {
 
 void clearToneList(void) {
     int i;
+    int j;
     for (i = 0; i < MAX_SONG_LENGTH+2; i++) {
-        toneList[i][0] = '\0';
+        for (j = 0; j < MAX_NAME_LENGTH; j++) {
+            toneList[i][j] = '\0';
+        }
     }
-    toneIndex = 0;
+    if (mode == IDENTIFY_MODE) {
+        toneIndex = 0;
+    } else if (mode == TEACHING_MODE) {
+        toneIndex = 2;
+    }
 }
 
 // Stops and clears toneList and toneIndex
@@ -248,13 +255,16 @@ void stop(short tooMuch) {
         int songIndex = identify();
         if (songIndex == -1) {
             if (tooMuch == 0) {
+                display_string(1, "");
                 display_string(2, "Much wrong");
+                display_string(3, "");
             }
         } else {
-            display_string(2, "I know!!! XD");
+            display_string(1, "");
+            display_string(3, "I know!!! XD");
             display_update();
             delay(2000);
-            display_string(2, songLibrary[songIndex][0]);
+            display_string(3, songLibrary[songIndex][0]);
         }
         display_update();
         display_image(96, icon);
@@ -375,16 +385,15 @@ int identify() {
         short slength = string2int(songLibrary[i][1]); // Length saved in index 1
         if (tlength == slength) { // Each song in the library contains two extra elements
             for (j = 0; j < tlength; j++) {
-                // display_string(3, itoaconv(compare_strings(toneList[j],songLibrary[i][j+2])));
-                // display_update();
                 if (!(compare_strings(toneList[j],songLibrary[i][j+2]) == 0)) {
                     break;
                 }
 
                 // När man godkänt sista tonen
                 if (j == tlength-1) {
-                    display_string(1, "Wow");
+                    display_string(2, "Wow");
                     display_update();
+                    display_image(96, icon);
                     return i;
                 }
             }
@@ -410,6 +419,63 @@ char *strcpy(char *dest, const char *src)
   return dest;
 }
 
+void display_menu(void) {
+    display_string(1, " ");
+	display_string(2, "Identify: 4");
+	display_string(3, "Teaching: 3");
+}
+
+void viewSong(short songIndex) {
+    int i;
+    for (i = 0; i < MAX_SONG_LENGTH; i++) {
+        if (compare_strings(songLibrary[songIndex][i],"") == 0) {
+            return;
+        }
+        display_string(1, itoaconv(i));
+        display_string(2, songLibrary[songIndex][i+2]);
+        display_update();
+        delay(800);
+        display_string(2, "");
+        display_update();
+        delay(150);
+    }
+}
+
+void viewSongsList(void) {
+    short songIndex = 0;
+    display_string(1, "");
+    display_string(2, songLibrary[songIndex][0]);
+    display_string(3, "");
+    display_update();
+    while(1) {
+        // Button 3 - Go forward
+        if (getbtns() & (1 << 1) && started == 0) {
+            while(getbtns() & (1 << 1)); // Block so button only updates on falling edge
+            songIndex++;
+            songIndex = songIndex % number_of_saved_songs;
+            display_string(2, songLibrary[songIndex][0]);
+            display_update();
+        }
+
+        // Button 4 - Examine song
+        if (getbtns() & (1 << 2) && started == 0) {
+            while(getbtns() & (1 << 2)); // Block so button only updates on falling edge
+            viewSong(songIndex);
+            display_string(2, songLibrary[songIndex][0]);
+            display_update();
+        }
+
+        // Button 2 - Go back to menu
+        if ((getbtns() & 1) && started == 0) {
+            while(getbtns() & 1); // Block so button only updates on falling edge
+            display_menu();
+            display_update();
+            display_image(96, icon);
+            break;
+        }
+    }
+}
+
 int menu(void) {
     // Button 4 - Identify mode
     if (getbtns() & (1 << 2) && started == 0) {
@@ -428,13 +494,12 @@ int menu(void) {
         display_play();
         return 0;
     }
-    return 1;
-}
 
-void display_menu(void) {
-    display_string(1, " ");
-	display_string(2, "Identify: 4");
-	display_string(3, "Teaching: 3");
+    if ((getbtns() & 1) && started == 0) {
+        while (getbtns() & 1);
+        viewSongsList();
+    }
+    return 1;
 }
 
 // This function is called repetitively from the main program

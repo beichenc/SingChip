@@ -48,8 +48,8 @@
       <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="28" column="32" selection-start-line="28" selection-start-column="32" selection-end-line="28" selection-end-column="32" />
+            <state relative-caret-position="210">
+              <caret line="24" column="121" selection-start-line="24" selection-start-column="121" selection-end-line="24" selection-end-column="121" />
               <folding />
             </state>
           </provider>
@@ -606,12 +606,12 @@
       <workItem from="1512552498135" duration="4616000" />
       <workItem from="1512587889793" duration="619000" />
       <workItem from="1512588811092" duration="3785000" />
-      <workItem from="1512807628175" duration="6401000" />
+      <workItem from="1512807628175" duration="10009000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="25997000" />
+    <option name="totallyTimeSpent" value="29605000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="26" width="1280" height="727" extended-state="6" />
@@ -811,8 +811,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="28" column="32" selection-start-line="28" selection-start-column="32" selection-end-line="28" selection-end-column="32" />
+        <state relative-caret-position="210">
+          <caret line="24" column="121" selection-start-line="24" selection-start-column="121" selection-end-line="24" selection-end-column="121" />
           <folding />
         </state>
       </provider>
