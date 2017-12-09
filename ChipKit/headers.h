@@ -52,6 +52,9 @@ void enable_interrupt(void);
 #define MAX_NAME_LENGTH (9)
 #define MAX_SONG_LENGTH (10)
 #define SONG_LIBRARY_SIZE (10)
+#define IDENTIFY_MODE (1)
+#define TEACHING_MODE (2)
 extern char blinka[12][9];
 extern char rudolf[12][9];
 extern char songLibrary[10][12][9];
+void strarraycpy(char (*dest)[MAX_NAME_LENGTH], char (*src)[MAX_NAME_LENGTH]);

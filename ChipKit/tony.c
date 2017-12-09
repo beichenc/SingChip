@@ -18,11 +18,12 @@ const short fft_size = 1024;
 const short backgroundSound = 100;
 const short hanning_factor = 32768;
 
-// Change global values?
 int toneIndex = 0;
-char toneList[10][MAX_NAME_LENGTH];
+char toneList[MAX_SONG_LENGTH+2][MAX_NAME_LENGTH];
 short started = 0;
 short number_of_saved_songs = 3;
+
+short mode = IDENTIFY_MODE; // Default is identify mode
 
 // TODO: Use volatile values?
 
@@ -66,6 +67,28 @@ void initchip( void)
     initspi();
     init_songLibrary();
     return;
+}
+
+void display_play(void) {
+    display_string(1, " ");
+    display_string(2, "Plz play");
+    display_string(3, " ");
+    display_update();
+}
+
+void clearToneList(void) {
+    int i;
+    for (i = 0; i < MAX_SONG_LENGTH+2; i++) {
+        toneList[i][0] = '\0';
+    }
+    toneIndex = 0;
+}
+
+// Stops and clears toneList and toneIndex
+void startOver(void) {
+    started = 0;
+    clearToneList();
+    display_play();
 }
 
   int maximum(short* array) {
@@ -147,29 +170,89 @@ void saveFrequencyAsTone(char* tone) {
     display_update();
 }
 
-void stop(void) {
-    started = 0;
-    // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
-    int songIndex = identify();
-    //display_string(3, itoaconv(songIndex));
-    // display_clear(2);
-    // display_update();
-    if (songIndex == -1) {
-        display_string(2, "Much wrong");
-    } else {
-        display_string(2, songLibrary[songIndex][0]);
+void save_to_library(void) {
+    char taughtSongName[MAX_NAME_LENGTH];
+    short taughtSongNameIndex = 0;
+    while(1) {
+        // Button 4 - First half of alphabet
+        if (getbtns() & (1 << 2)) {
+            while(getbtns() & (1 << 2)); // Block so button only updates on falling edge
+            if (getsw() < 13) {
+                taughtSongName[taughtSongNameIndex] = getLetter(getsw());
+                taughtSongNameIndex++;
+                display_string(3, taughtSongName);
+            } else {
+                display_string(3, "Much wrong");
+                display_update();
+            }
+        }
+
+        // Button 3 - Second half of alphabet
+        if(getbtns() & (1 << 1)){
+            while (getbtns() & (1 << 1)); // Block so button only updates on falling edge
+            if (getsw() < 13) {
+                taughtSongName[taughtSongNameIndex] = getLetter(getsw()+13);
+                taughtSongNameIndex++;
+                display_string(3, taughtSongName);
+            } else {
+                display_string(3, "Much wrong");
+                display_update();
+            }
+        }
+
+        // Button 4 and 3 at the same time - Cancel
+        if ((getbtns() & (3 << 1))) {
+            while(getbtns() & (1 << 2));
+            while (getbtns() & (1 << 1));
+            startOver();
+            break; // Breaks and goes back to start of teaching mode
+        }
+
+        // Button 2 - Save and clear toneList for next round
+        if (getbtns() & 1) {
+            while(getbtns() & 1);
+            if (taughtSongNameIndex != 0) {
+                strcpy(toneList[0],taughtSongName);
+                strcpy(toneList[1],itoaconv(toneIndex-1));
+                strarraycpy(songLibrary[number_of_saved_songs],toneList);
+                number_of_saved_songs++;
+                clearToneList();
+                started = 0;
+                display_string(3, "Very song");
+                display_update();
+                delay(2000);
+                display_play();
+                break;
+            } else {
+                display_string(3, "Uhoh! Much empty");
+                display_update();
+            }
+        }
     }
-    display_update();
-    toneIndex = 0;
-    int i;
-    for (i = 0; i < MAX_SONG_LENGTH; i++) {
-        // TODO
-        //strcpy(toneList[i],"0");
-        toneList[i][0] = '\0';
-    }
-    //delay(5000);
 }
 
+void stop(void) {
+    started = 0;
+    if (mode == IDENTIFY_MODE) {
+        // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
+        int songIndex = identify();
+        //display_string(3, itoaconv(songIndex));
+        // display_clear(2);
+        // display_update();
+        if (songIndex == -1) {
+            display_string(2, "Much wrong");
+        } else {
+            display_string(2, songLibrary[songIndex][0]);
+        }
+        display_update();
+        clearToneList();
+        //delay(5000);
+    } else if (mode == TEACHING_MODE) {
+        save_to_library();
+    }
+}
+
+// Perform FFT, check if valid, convert frequency to tone and save tone
 void do_fft(short* amplitudeList) {
     static short imaginaryList[1024];
     // TODO: Behöver vi initialisera alla värden till 0?
@@ -230,11 +313,15 @@ void do_fft(short* amplitudeList) {
         toneIndex++;
     }
     // Tone sequence full - we ignore all values and wait for stop button to be pressed
-    if (toneIndex == MAX_SONG_LENGTH) {
-        // TODO: Delay or just exit as if stop button pressed
+    if (toneIndex == MAX_SONG_LENGTH && mode == IDENTIFY_MODE) {
         display_string(3, "U played 2 much! LOL");
         display_update();
         stop();
+        return;
+    } else if (toneIndex == MAX_SONG_LENGTH+2 && mode == TEACHING_MODE) {
+        display_string(3, "U played 2 much! LOL");
+        display_update();
+        startOver();
         return;
     }
 }
@@ -327,29 +414,46 @@ char *strcpy(char *dest, const char *src)
   return dest;
 }
 
-// void test(void) {
-//     char test[9];
-//     test[0] = 'C';
-//     test[1] = '4';
-//     test[2] = '\0';
-//     char test2[9];
-//     strcpy(test2,"C4");
-//     display_string(1, itoaconv(compare_strings(test,test2)));
-//     display_update();
-//     delay(5000);
-// }
+void menu(void) {
+    // Button 4 - Identify mode
+    if (getbtns() & (1 << 2) && started == 0) {
+        mode = IDENTIFY_MODE;
+        display_play();
+        return;
+    }
+
+    // Button 3 - Teaching mode
+    if(getbtns() & (1 << 1) && started == 1){
+        mode = TEACHING_MODE;
+        toneIndex = 2; // Begin on second index to make space for name and length
+        display_play();
+        return;
+    }
+}
 
 // This function is called repetitively from the main program
 void tony( void ) {
-    //test();
     // Starting
     if (getbtns() & (1 << 2) && started == 0) {
-        started = 1;
+        while(getbtns() & (1 << 2)); // Block so button only updates on falling edge
+        if ((mode == TEACHING_MODE) && (number_of_saved_songs >= SONG_LIBRARY_SIZE)) {
+            display_string(2, "Much full");
+            display_update();
+        } else {
+            started = 1;
+        }
     }
 
     // Stopping
     if(getbtns() & (1 << 1) && started == 1){
+        while(getbtns() & (1 << 1)); // Block so button only updates on falling edge
         stop();
+    }
+
+    // Exit mode, go back to menu
+    if((getbtns() & 1) && started == 0) {
+        while(getbtns() & 1); // Block so button only updates on falling edge
+        return;
     }
 }
 

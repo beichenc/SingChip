@@ -1,11 +1,15 @@
 ### TODO
-- Refactor global variables
-- String concatenation, string length (just sizeof?)
 - Comment on which functions were gotten from the internet, which we modified and which we wrote ourselves completely
+- volatile
+- teaching mode
+- skriv en "manus" med alla settings på volym osv och vad vi ska demonstrera
+- manus på allt vi gjort själva, dvs INTE bara bibliotek på fft
+- skriv en användarmanual
+- Copyright
+
+## Om vi orkar
+- String concatenation, string length (just sizeof?)
 - Fix tab lengths
-- Put all global stuff in some kind of initialize?
-- kolla #define
-- skriv en display_clear
 
 ### Frågor
 - Ha button i interrupt eller i while?

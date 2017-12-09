@@ -5,6 +5,8 @@
 
    Latest update 2017-04-21 by F Lundevall
 
+   Modified by Beichen Chen and Amy Chen 9 Dec 2017
+
    For copyright and licensing, see file COPYING */
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
@@ -56,7 +58,6 @@ int main(void) {
 
 	display_init();
 	display_string(0, "HI I'M TONY :)");
-	display_string(2, "Plz play");
 	display_update();
 
 	display_image(96, icon);
@@ -65,7 +66,17 @@ int main(void) {
 
 	while( 1 )
 	{
-	  tony();
+		display_string(1, " ");
+	    display_string(2, "Identify: 4");
+		display_string(3, "Teaching: 3");
+	    display_update();
+		while(1) {
+			menu();
+		}
+
+		while(1) {
+			tony();
+		}
 	}
 	return 0;
 }
