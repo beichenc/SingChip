@@ -17,7 +17,8 @@ uint8_t spi_send_recv(uint8_t data);
 char * itoaconv( int num );
 
 // Tony.c
-void tony(void);
+int tony(void);
+// TODO: declare all functions?
 
 /* Declare display_debug - a function to help debugging.
 

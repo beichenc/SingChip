@@ -58,6 +58,7 @@ int main(void) {
 
 	display_init();
 	display_string(0, "HI I'M TONY :)");
+	display_menu();
 	display_update();
 
 	display_image(96, icon);
@@ -66,16 +67,17 @@ int main(void) {
 
 	while( 1 )
 	{
-		display_string(1, " ");
-	    display_string(2, "Identify: 4");
-		display_string(3, "Teaching: 3");
-	    display_update();
 		while(1) {
-			menu();
+			int isContinue = menu();
+			if (isContinue == 0) {
+				break;
+			}
 		}
-
 		while(1) {
-			tony();
+			int isContinue = tony();
+			if (isContinue == 0) {
+				break;
+			}
 		}
 	}
 	return 0;

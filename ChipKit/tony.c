@@ -74,6 +74,7 @@ void display_play(void) {
     display_string(2, "Plz play");
     display_string(3, " ");
     display_update();
+    display_image(96, icon);
 }
 
 void clearToneList(void) {
@@ -170,42 +171,49 @@ void saveFrequencyAsTone(char* tone) {
     display_update();
 }
 
+void addLetterToName(short* taughtSongNameIndex, int offset, char* taughtSongName) {
+    if (*taughtSongNameIndex >= MAX_NAME_LENGTH) {
+        display_string(3, "2 much name!"); // Name length is too long
+        display_update();
+        display_image(96, icon);
+        delay(1500);
+    } else {
+        if (getsw() < 13) {
+            taughtSongName[*taughtSongNameIndex] = getLetter(getsw()+offset);
+            *taughtSongNameIndex = *taughtSongNameIndex+1;
+            display_string(3, taughtSongName);
+            display_update();
+        } else {
+            display_string(3, "Much wrong");
+            display_update();
+            display_image(96, icon);
+        }
+    }
+}
+
 void save_to_library(void) {
     char taughtSongName[MAX_NAME_LENGTH];
+    int i;
+    for (i = 0; i < MAX_NAME_LENGTH; i++) {
+        taughtSongName[i] = '\0';
+    }
     short taughtSongNameIndex = 0;
+    display_string(1, "");
+    display_string(2, "Plz name");
+    display_string(3, taughtSongName);
+    display_update();
+    display_image(96, icon);
     while(1) {
         // Button 4 - First half of alphabet
         if (getbtns() & (1 << 2)) {
             while(getbtns() & (1 << 2)); // Block so button only updates on falling edge
-            if (getsw() < 13) {
-                taughtSongName[taughtSongNameIndex] = getLetter(getsw());
-                taughtSongNameIndex++;
-                display_string(3, taughtSongName);
-            } else {
-                display_string(3, "Much wrong");
-                display_update();
-            }
+            addLetterToName(&taughtSongNameIndex, 0, taughtSongName);
         }
 
         // Button 3 - Second half of alphabet
         if(getbtns() & (1 << 1)){
             while (getbtns() & (1 << 1)); // Block so button only updates on falling edge
-            if (getsw() < 13) {
-                taughtSongName[taughtSongNameIndex] = getLetter(getsw()+13);
-                taughtSongNameIndex++;
-                display_string(3, taughtSongName);
-            } else {
-                display_string(3, "Much wrong");
-                display_update();
-            }
-        }
-
-        // Button 4 and 3 at the same time - Cancel
-        if ((getbtns() & (3 << 1))) {
-            while(getbtns() & (1 << 2));
-            while (getbtns() & (1 << 1));
-            startOver();
-            break; // Breaks and goes back to start of teaching mode
+            addLetterToName(&taughtSongNameIndex, 13, taughtSongName);
         }
 
         // Button 2 - Save and clear toneList for next round
@@ -213,40 +221,44 @@ void save_to_library(void) {
             while(getbtns() & 1);
             if (taughtSongNameIndex != 0) {
                 strcpy(toneList[0],taughtSongName);
-                strcpy(toneList[1],itoaconv(toneIndex-1));
+                strcpy(toneList[1],itoaconv(toneIndex-2));
                 strarraycpy(songLibrary[number_of_saved_songs],toneList);
                 number_of_saved_songs++;
                 clearToneList();
                 started = 0;
-                display_string(3, "Very song");
+                display_string(3, "Very song"); // Song successfully learned
                 display_update();
-                delay(2000);
+                display_image(96, icon);
+                delay(1000);
                 display_play();
                 break;
             } else {
-                display_string(3, "Uhoh! Much empty");
+                display_string(3, "Uhoh! Much empty"); // Name is empty, so you have to write something
                 display_update();
+                display_image(96, icon);
             }
         }
     }
 }
 
-void stop(void) {
+void stop(short tooMuch) {
     started = 0;
     if (mode == IDENTIFY_MODE) {
-        // Stop knapp -> start comparing toneList to our database. Get back an int that corresponds to a song.
+        // Stop button -> start comparing toneList to our database. Get back an int that corresponds to a song.
         int songIndex = identify();
-        //display_string(3, itoaconv(songIndex));
-        // display_clear(2);
-        // display_update();
         if (songIndex == -1) {
-            display_string(2, "Much wrong");
+            if (tooMuch == 0) {
+                display_string(2, "Much wrong");
+            }
         } else {
+            display_string(2, "I know!!! XD");
+            display_update();
+            delay(2000);
             display_string(2, songLibrary[songIndex][0]);
         }
         display_update();
+        display_image(96, icon);
         clearToneList();
-        //delay(5000);
     } else if (mode == TEACHING_MODE) {
         save_to_library();
     }
@@ -255,7 +267,6 @@ void stop(void) {
 // Perform FFT, check if valid, convert frequency to tone and save tone
 void do_fft(short* amplitudeList) {
     static short imaginaryList[1024];
-    // TODO: Behöver vi initialisera alla värden till 0?
     static int imindex;
     imindex = 0;
     while(imindex < fft_size){
@@ -263,46 +274,26 @@ void do_fft(short* amplitudeList) {
         imindex++;
     }
 
-    //Applicera Hanning window på amplitudelist
+    //Apply Hanning window on amplitudelist
     int i;
     for (i = 0; i < fft_size; i++) {
         amplitudeList[i] = hanning[i] * amplitudeList[i] / hanning_factor;
     }
 
-    // Använd bibliotek
+    // Use fft library
     gst_spectrum_fix_fft(amplitudeList, imaginaryList, 10, 0);
 
-    //Pytagoras sats på den nya amplitudeList och imaginaryList
+    //Pythagoras theorem on the new amplitudeList and imaginaryList
     short fftOutput[fft_size/2];
     squareroot(amplitudeList, imaginaryList, fftOutput);
 
-    // Ta max av amplitudeList, ta ut index och räkna ut frekvens.
+    // Take max of amplitudeList, find the index och get the frequency.
     int indexOfMax = maximum(fftOutput);
     int frequency = indexOfMax*fft_sample_rate/fft_size;
-    // char freqstr[6] = "Freq: ";
-    // char freqline[9];
-    // int a;
-    // for (a = 0; a < 9; a++) {
-    //     if (a < 6) {
-    //         freqline[a] = freqstr[a];
-    //     } else {
-    //         freqline[a] = itoaconv(frequency)[a-6];
-    //     }
-    // }
     display_string(3, itoaconv(frequency));
 
     static char tone[MAX_NAME_LENGTH];
     freqToTone(frequency, tone);
-    // char tonestr[6] = "Tone: ";
-    // char toneline[9];
-    // int j;
-    // for (j = 0; j < 9; j++) {
-    //     if (j < 6) {
-    //         toneline[j] = tonestr[j];
-    //     } else {
-    //         toneline[j] = tone[j-6];
-    //     }
-    // }
     display_string(2, tone);
     display_update();
 
@@ -314,13 +305,19 @@ void do_fft(short* amplitudeList) {
     }
     // Tone sequence full - we ignore all values and wait for stop button to be pressed
     if (toneIndex == MAX_SONG_LENGTH && mode == IDENTIFY_MODE) {
-        display_string(3, "U played 2 much! LOL");
+        display_string(1, "");
+        display_string(2, "LOL!!!");
+        display_string(3, "U play 2much");
         display_update();
-        stop();
+        display_image(96, icon);
+        stop(1);
         return;
     } else if (toneIndex == MAX_SONG_LENGTH+2 && mode == TEACHING_MODE) {
-        display_string(3, "U played 2 much! LOL");
+        display_string(1, "");
+        display_string(2, "LOL!!!");
+        display_string(3, "U play 2much");
         display_update();
+        display_image(96, icon);
         startOver();
         return;
     }
@@ -374,7 +371,6 @@ int compare_strings(char a[], char b[])
 int identify() {
     int i, j;
     short tlength = toneIndex;
-    // TODO:
     for (i = 0; i < number_of_saved_songs; i++) {
         short slength = string2int(songLibrary[i][1]); // Length saved in index 1
         if (tlength == slength) { // Each song in the library contains two extra elements
@@ -414,50 +410,74 @@ char *strcpy(char *dest, const char *src)
   return dest;
 }
 
-void menu(void) {
+int menu(void) {
     // Button 4 - Identify mode
     if (getbtns() & (1 << 2) && started == 0) {
+        while(getbtns() & (1 << 2)); // Block so button only updates on falling edge
         mode = IDENTIFY_MODE;
+        toneIndex = 0;
         display_play();
-        return;
+        return 0;
     }
 
     // Button 3 - Teaching mode
-    if(getbtns() & (1 << 1) && started == 1){
+    if(getbtns() & (1 << 1) && started == 0){
+        while(getbtns() & (1 << 1)); // Block so button only updates on falling edge
         mode = TEACHING_MODE;
         toneIndex = 2; // Begin on second index to make space for name and length
         display_play();
-        return;
+        return 0;
     }
+    return 1;
+}
+
+void display_menu(void) {
+    display_string(1, " ");
+	display_string(2, "Identify: 4");
+	display_string(3, "Teaching: 3");
 }
 
 // This function is called repetitively from the main program
-void tony( void ) {
-    // Starting
+int tony( void ) {
+    // Starting - Button 4
     if (getbtns() & (1 << 2) && started == 0) {
         while(getbtns() & (1 << 2)); // Block so button only updates on falling edge
         if ((mode == TEACHING_MODE) && (number_of_saved_songs >= SONG_LIBRARY_SIZE)) {
-            display_string(2, "Much full");
+            display_string(2, "Much full"); // Song library is full, so you can't teach Tony anymore songs
             display_update();
+            display_image(96, icon);
         } else {
             started = 1;
         }
+        return 1;
     }
 
-    // Stopping
+    // Stopping - Button 3
     if(getbtns() & (1 << 1) && started == 1){
         while(getbtns() & (1 << 1)); // Block so button only updates on falling edge
-        stop();
+        stop(0);
+        return 1;
     }
 
-    // Exit mode, go back to menu
+    // Exit mode, go back to menu - Button 2 when game has not started
     if((getbtns() & 1) && started == 0) {
         while(getbtns() & 1); // Block so button only updates on falling edge
-        return;
+        display_menu();
+        display_update();
+        display_image(96, icon);
+        return 0;
     }
+
+    // Cancel game and start over - Button 2 when game has started
+    if ((getbtns() & 1) && started == 1) {
+        while(getbtns() & 1); // Block so button only updates on falling edge
+        startOver();
+    }
+
+    return 1;
 }
 
-/* Interrupt Service Routine */
+// Interrupt Service Routine
 void user_isr( void) {
     static short amplitudeList[1024];
     static char received;
@@ -479,7 +499,6 @@ void user_isr( void) {
             sample_counter = 0;
           } else{
               // Save to sample array
-              // TODO: What was the benefit of using static instead of global?
               save(received, sample_counter, amplitudeList);
             IFSCLR(0) = 0x100;
             sample_counter = sample_counter + 1;
