@@ -1,11 +1,29 @@
+Files written by:
 Copyright (c) 2015, Axel Isaksson
 Copyright (c) 2015, F Lundevall
+data.c
+display.c
+main.c
+stubs.c
+vectors.S
+headers.h
 
-If you're a student, and you have modified one or more files,
-you must add your name here.
-
+Files written/modified by:
 Copyright (c) 2017, Beichen Chen
 Copyright (c) 2017, Amy Chen
+tony.c
+tonetable.c
+songlibrary.c
+io.c
+labwork.S
+main.c (modified)
+headers.h (modified)
+fft.c (modified)
+fft.h (modified)
+
+Files from external library (see copyright in specific files):
+fft.c
+fft.h
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions

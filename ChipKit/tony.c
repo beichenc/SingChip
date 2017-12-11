@@ -3,18 +3,15 @@
    This file written 2017 by Beichen Chen and Amy Chen
 
    For copyright and licensing, see file COPYING */
-   // TODO: Check copyrights, I mean, there's absolutely no code in this file not written by us only.
 
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 #include "headers.h"  /* Declatations for these labs */
-#include <stdio.h> // TODO: are we using this?
-#include <stdlib.h> // TODO: are we using this?
 #include "fft.h"
 
+/***** Constants and global variables for re-use *****/
 const short fft_sample_rate = 4000;
 const short fft_size = 1024;
-// // TODO: Verify this value
 const short backgroundSound = 100;
 const short hanning_factor = 32768;
 
@@ -22,11 +19,9 @@ int toneIndex = 0;
 char toneList[MAX_SONG_LENGTH+2][MAX_NAME_LENGTH];
 short started = 0;
 short number_of_saved_songs = 3;
-
 short mode = IDENTIFY_MODE; // Default is identify mode
 
-// TODO: Use volatile values?
-
+/***** Initiation of ChipKit pins *****/
 void initspi(void) {
     char junk;
     SPI1CON = 0;
@@ -34,8 +29,7 @@ void initspi(void) {
     SPI1CONCLR = 0x800; // 32 bits data = bit 11 (12e bit)
     SPI1CONSET = 0x400; // 16 bits data = bit 10 (11e bit)
     junk = SPI1BUF;
-    SPI1BRG = 8; // 4.7Mhz, större SPI1BRG fungerar inte - varför?
-    // SPI1BRG = 7 // 5.3 Mhz
+    SPI1BRG = 8; // 4.7Mhz
     SPI1CONSET = 0x20; // MSTEN = bit 5 (6e bit)
     SPI1CONSET = 0x100; // CKE = bit 8 (9e bit)
     SPI1STATCLR = 0x40; // Clear SPIROV bit, bit 6
@@ -50,26 +44,22 @@ void initchip( void)
 {
     volatile int *trise = (volatile int*) 0xbf886100;
     *trise = *trise & 0xffffff00;
-    //volatile int *porte = (volatile int*) 0xbf886110;
     PORTESET = 0xffffff00;
     TRISDSET = 0xFE0;
-    T2CONSET = (0 << 15); //Slå av timer
+    T2CONSET = (0 << 15); // Turn off timer
     TMR2 = 0;
     T2CONCLR = (7 << 4);
     PR2 = 20000; // 4000Hz
-    IECSET(0) = (1 << 8); //enable the timer 2 interrupt (bit 8)
-    IPCSET(2) = 0xC; //Pirority 3 (bits 2-4)
-    // TODO: We don't need the following interrupt?
-    IECSET(0) = (1 << 19);
-    IPCSET(4) = (0x3 << 10);
-    T2CONSET = (1 << 15);
-    //Calling the function enable_interrupt in labwork.S
-    enable_interrupt();
+    IECSET(0) = (1 << 8); // Enable the timer 2 interrupt (bit 8)
+    IPCSET(2) = 0xC; // Priority 3 (bits 2-4)
+    T2CONSET = (1 << 15); // Turn on timer
+    enable_interrupt(); // Calling the function enable_interrupt in labwork.S
     initspi();
     init_songLibrary();
     return;
 }
 
+/***** Display functions for different menus *****/
 void display_play(void) {
     display_string(1, " ");
     display_string(2, "Plz play");
@@ -78,6 +68,76 @@ void display_play(void) {
     display_image(96, icon);
 }
 
+void display_menu(void) {
+    display_string(1, " ");
+	display_string(2, "Identify: 4");
+	display_string(3, "Teaching: 3");
+}
+
+void display_2much(void) {
+    display_string(1, "");
+    display_string(2, "LOL!!!");
+    display_string(3, "U play 2much");
+    display_update();
+}
+
+/***** Helper functions for strings *****/
+char *strcpy(char *dest, const char *src)
+{
+  unsigned i;
+  for (i=0; src[i] != '\0'; ++i)
+    dest[i] = src[i];
+
+  return dest;
+}
+
+// Found online
+int string2int(char a[]) {
+  int c, sign, offset, n;
+
+  if (a[0] == '-') {  // Handle negative integers
+    sign = -1;
+  }
+
+  if (sign == -1) {  // Set starting position to convert
+    offset = 1;
+  }
+  else {
+    offset = 0;
+  }
+
+  n = 0;
+
+  for (c = offset; a[c] != '\0'; c++) {
+    n = n * 10 + a[c] - '0';
+  }
+
+  if (sign == -1) {
+    n = -n;
+  }
+
+  return n;
+}
+
+// Found online
+int compare_strings(char a[], char b[])
+{
+   int c = 0;
+
+   while (a[c] == b[c]) {
+      if (a[c] == '\0' || b[c] == '\0')
+         break;
+      c++;
+   }
+
+   if (a[c] == '\0' && b[c] == '\0')
+      return 0;
+   else
+      return -1;
+}
+
+/***** Reset functions *****/
+// Clears toneList so it can be used for the next round
 void clearToneList(void) {
     int i;
     int j;
@@ -93,14 +153,57 @@ void clearToneList(void) {
     }
 }
 
-// Stops and clears toneList and toneIndex
+// Stops the core algorithm, clears toneList and toneIndex and display message
 void startOver(void) {
     started = 0;
     clearToneList();
     display_play();
 }
 
-// Tony's lightshow
+/***** Helper functions for square root and maximum *****/
+// Find the index that contains the max value of the array
+int maximum(short* array) {
+    int i;
+    int max = 0;
+    int maxindex;
+    // Check up until fft_size/2, where our max frequency is (Nyqvist frequency)
+    for (i = 0; i < fft_size/2; i++) {
+        if (array[i] > max) {
+            max = array[i];
+            maxindex = i;
+        }
+    }
+    return maxindex;
+}
+
+// Function found online and modified to operate on arrays.
+void squareroot(short* realList, short* imaginaryList, short* fftOutput){
+  int i;
+  short num;
+  short res;
+  short bit; // The second-to-top bit is set: 1 << 30 for 32 bits
+  for(i=0;i<fft_size/2;i++){
+    res = 0;
+    bit = 1 << 14;
+    num = (realList[i] * realList[i] + imaginaryList[i] * imaginaryList[i]);
+    // "bit" starts at the highest power of four <= the argument.
+    while (bit > num)
+        bit >>= 2;
+
+    while (bit != 0) {
+        if (num >= res + bit) {
+            num -= res + bit;
+            res = (res >> 1) + bit;
+        }
+        else
+            res >>= 1;
+        bit >>= 2;
+    }
+    fftOutput[i] = res;
+  }
+}
+
+/***** Tony's lightshow *****/
 void victoryLights(void) {
     int i;
     int lightsOff = 0xffffff00;
@@ -121,91 +224,40 @@ void victoryLights(void) {
     }
 }
 
-  int maximum(short* array) {
-      int i;
-      int max = 0;
-      int maxindex;
-      // Kollar upp till size, då vi redan har halverat listan innan vi skickat in,
-      //då får vi vår max frekvens (Nyqvist frekvens).
-      for (i = 0; i < fft_size/2; i++) {
-          if (array[i] > max) {
-              max = array[i];
-              maxindex = i;
-          }
-      }
-      return maxindex;
-  }
+/***** Identify mode *****/
+// Compares toneList to songs in the song library to find one that matches exactly, or return not found
+int identify() {
+    int i, j;
+    short tlength = toneIndex;
+    for (i = 0; i < number_of_saved_songs; i++) {
+        short slength = string2int(songLibrary[i][1]); // Length saved in index 1
+        if (tlength == slength) { // Each song in the library contains two extra elements
+            for (j = 0; j < tlength; j++) {
+                if (!(compare_strings(toneList[j],songLibrary[i][j+2]) == 0)) {
+                    break;
+                }
 
-  // Function found online and modified to operate on arrays.
-  void squareroot(short* realList, short* imaginaryList, short* fftOutput){
-    int i;
-    short num;
-    short res;
-    short bit; // The second-to-top bit is set: 1 << 30 for 32 bits
-    for(i=0;i<fft_size/2;i++){
-      res = 0;
-      bit = 1 << 14;
-      num = (realList[i] * realList[i] + imaginaryList[i] * imaginaryList[i]);
-      // "bit" starts at the highest power of four <= the argument.
-      while (bit > num)
-          bit >>= 2;
-
-      while (bit != 0) {
-          if (num >= res + bit) {
-              num -= res + bit;
-              res = (res >> 1) + bit;
-          }
-          else
-              res >>= 1;
-          bit >>= 2;
-      }
-      fftOutput[i] = res;
+                // When the last tone has been checked and correct
+                if (j == tlength-1) {
+                    display_string(2, "Wow");
+                    display_update();
+                    display_image(96, icon);
+                    return i;
+                }
+            }
+        }
     }
-  }
-
-void save(short amplitude, int index, short* amplitudeList) {
-    *(amplitudeList+index) = amplitude;
+    // No song matched
+    return -1;
 }
 
-// A valid tone is one that follows an empty (background sound) or different tone, and is not background sound
-int getValidTone(short frequency, char* tone) {
-    static int newTone = 1;
-    // We ignore background sound, but this is an indicator that it's time to listen for a new tone.
-    if (frequency < backgroundSound) {
-        newTone = 1;
-        return 0;
-    }
-
-    // Not background sound
-
-    // If toneIndex is 0, save, so we don't get index out of bounds error in next if.
-    if (toneIndex == 0) {
-        newTone = 0;
-        return 1;
-    }
-
-    // If it's a new tone (e.g. one separated from previous by empty sound), it's valid.
-    if (newTone == 1) {
-        newTone = 0;
-        return 1;
-    }
-
-    // Same tone as previously without any empty tone in between
-    return 0;
-}
-
-void saveFrequencyAsTone(char* tone) {
-    strcpy(toneList[toneIndex],tone);
-    display_string(1, tone);
-    display_update();
-}
-
+/***** Teaching mode *****/
+// Adds one letter to song name or display message if name is too long
 void addLetterToName(short* taughtSongNameIndex, int offset, char* taughtSongName) {
-    if (*taughtSongNameIndex >= MAX_NAME_LENGTH) {
+    if (*taughtSongNameIndex == MAX_NAME_LENGTH-1) {
         display_string(3, "2 much name!"); // Name length is too long
         display_update();
         display_image(96, icon);
-        delay(1500);
     } else {
         if (getsw() < 13) {
             taughtSongName[*taughtSongNameIndex] = getLetter(getsw()+offset);
@@ -220,6 +272,7 @@ void addLetterToName(short* taughtSongNameIndex, int offset, char* taughtSongNam
     }
 }
 
+// Save the played song with a song name into the song library
 void save_to_library(void) {
     char taughtSongName[MAX_NAME_LENGTH];
     int i;
@@ -270,6 +323,47 @@ void save_to_library(void) {
     }
 }
 
+/***** Core algorithm functions *****/
+// Saves one sample of the sound wave amplitude from SPI microphone into amplitudeList
+void save(short amplitude, int index, short* amplitudeList) {
+    *(amplitudeList+index) = amplitude;
+}
+
+// A valid tone is one that follows an empty (background sound) or different tone, and is not background sound
+int getValidTone(short frequency, char* tone) {
+    static int newTone = 1;
+    // We ignore background sound, but this is an indicator that it's time to listen for a new tone.
+    if (frequency < backgroundSound) {
+        newTone = 1;
+        return 0;
+    }
+
+    // Not background sound
+
+    // If toneIndex is 0, save, so we don't get index out of bounds error in next if.
+    if (toneIndex == 0) {
+        newTone = 0;
+        return 1;
+    }
+
+    // If it's a new tone (e.g. one separated from previous by empty sound), it's valid.
+    if (newTone == 1) {
+        newTone = 0;
+        return 1;
+    }
+
+    // Same tone as previously without any empty tone in between
+    return 0;
+}
+
+// Saves the tone converted from frequency value into toneList
+void saveFrequencyAsTone(char* tone) {
+    strcpy(toneList[toneIndex],tone);
+    display_string(1, tone);
+    display_update();
+}
+
+// Stops the core algorithm and either identifies according to song library or proceeds to save to song library
 void stop(short tooMuch) {
     started = 0;
     if (mode == IDENTIFY_MODE) {
@@ -309,7 +403,7 @@ void do_fft(short* amplitudeList) {
         imindex++;
     }
 
-    //Apply Hanning window on amplitudelist
+    // Apply Hanning window on amplitudelist
     int i;
     for (i = 0; i < fft_size; i++) {
         amplitudeList[i] = hanning[i] * amplitudeList[i] / hanning_factor;
@@ -318,7 +412,7 @@ void do_fft(short* amplitudeList) {
     // Use fft library
     gst_spectrum_fix_fft(amplitudeList, imaginaryList, 10, 0);
 
-    //Pythagoras theorem on the new amplitudeList and imaginaryList
+    // Pythagoras theorem on each value in the new amplitudeList and imaginaryList
     short fftOutput[fft_size/2];
     squareroot(amplitudeList, imaginaryList, fftOutput);
 
@@ -338,125 +432,28 @@ void do_fft(short* amplitudeList) {
         saveFrequencyAsTone(tone);
         toneIndex++;
     }
-    // Tone sequence full - we ignore all values and wait for stop button to be pressed
+    // Tone sequence full
     if (toneIndex == MAX_SONG_LENGTH && mode == IDENTIFY_MODE) {
-        display_string(1, "");
-        display_string(2, "LOL!!!");
-        display_string(3, "U play 2much");
-        display_update();
+        display_2much();
         display_image(96, icon);
         stop(1);
         return;
     } else if (toneIndex == MAX_SONG_LENGTH+2 && mode == TEACHING_MODE) {
-        display_string(1, "");
-        display_string(2, "LOL!!!");
-        display_string(3, "U play 2much");
-        display_update();
+        display_2much();
         display_image(96, icon);
         startOver();
         return;
     }
 }
 
-// Found online
-int string2int(char a[]) {
-  int c, sign, offset, n;
-
-  if (a[0] == '-') {  // Handle negative integers
-    sign = -1;
-  }
-
-  if (sign == -1) {  // Set starting position to convert
-    offset = 1;
-  }
-  else {
-    offset = 0;
-  }
-
-  n = 0;
-
-  for (c = offset; a[c] != '\0'; c++) {
-    n = n * 10 + a[c] - '0';
-  }
-
-  if (sign == -1) {
-    n = -n;
-  }
-
-  return n;
-}
-
-// Found online
-int compare_strings(char a[], char b[])
-{
-   int c = 0;
-
-   while (a[c] == b[c]) {
-      if (a[c] == '\0' || b[c] == '\0')
-         break;
-      c++;
-   }
-
-   if (a[c] == '\0' && b[c] == '\0')
-      return 0;
-   else
-      return -1;
-}
-
-int identify() {
-    int i, j;
-    short tlength = toneIndex;
-    for (i = 0; i < number_of_saved_songs; i++) {
-        short slength = string2int(songLibrary[i][1]); // Length saved in index 1
-        if (tlength == slength) { // Each song in the library contains two extra elements
-            for (j = 0; j < tlength; j++) {
-                if (!(compare_strings(toneList[j],songLibrary[i][j+2]) == 0)) {
-                    break;
-                }
-
-                // När man godkänt sista tonen
-                if (j == tlength-1) {
-                    display_string(2, "Wow");
-                    display_update();
-                    display_image(96, icon);
-                    return i;
-                }
-            }
-        }
-    }
-    // No song matched
-    return -1;
-}
-
-// char *strcpy(char *dest, const char *src)
-// {
-//    char *save = dest;
-//    while(*dest++ = *src++);
-//    return save;
-// }
-
-char *strcpy(char *dest, const char *src)
-{
-  unsigned i;
-  for (i=0; src[i] != '\0'; ++i)
-    dest[i] = src[i];
-
-  return dest;
-}
-
-void display_menu(void) {
-    display_string(1, " ");
-	display_string(2, "Identify: 4");
-	display_string(3, "Teaching: 3");
-}
-
+/***** View functions *****/
+// Quickly runs through all the tones in the chosen song
 void viewSong(short songIndex) {
     int i;
     for (i = 0; i < MAX_SONG_LENGTH; i++) {
         if (compare_strings(songLibrary[songIndex][i],"") == 0) {
             return;
         }
-        //display_string(1, itoaconv(i));
         display_string(2, songLibrary[songIndex][i+2]);
         display_update();
         delay(800);
@@ -466,6 +463,7 @@ void viewSong(short songIndex) {
     }
 }
 
+// Browse through existing songs in the song library, both pre-saved and taught
 void viewSongsList(void) {
     short songIndex = 0;
     display_string(1, "");
@@ -501,6 +499,8 @@ void viewSongsList(void) {
     }
 }
 
+/***** Navigation and command functions *****/
+// Called repetitively from the main program on start, until a choice is made with buttons
 int menu(void) {
     // Button 4 - Identify mode
     if (getbtns() & (1 << 2) && started == 0) {
@@ -520,6 +520,7 @@ int menu(void) {
         return 0;
     }
 
+    // Button 2 - View song list
     if ((getbtns() & 1) && started == 0) {
         while (getbtns() & 1);
         viewSongsList();
@@ -527,13 +528,13 @@ int menu(void) {
     return 1;
 }
 
-// This function is called repetitively from the main program
+// Called repetitively after menu breaks from the main program, until cancel is pressed
 int tony( void ) {
     // Starting - Button 4
     if (getbtns() & (1 << 2) && started == 0) {
         while(getbtns() & (1 << 2)); // Block so button only updates on falling edge
         if ((mode == TEACHING_MODE) && (number_of_saved_songs >= SONG_LIBRARY_SIZE)) {
-            display_string(2, "Much full"); // Song library is full, so you can't teach Tony anymore songs
+            display_string(2, "Much full"); // Song library is full, so you can't teach Tony any more songs
             display_update();
             display_image(96, icon);
         } else {
@@ -567,7 +568,8 @@ int tony( void ) {
     return 1;
 }
 
-// Interrupt Service Routine
+/***** Interrupt service routine *****/
+//Drives the core algorithm
 void user_isr( void) {
     static short amplitudeList[1024];
     static char received;
@@ -583,13 +585,13 @@ void user_isr( void) {
             received = SPI1BUF;
             PORTBSET = 0x4; // Set SS1 to 1
           if(sample_counter == fft_size){
-              // Sample array full - Time to do FFT
+            // Sample array full - Time to do FFT
             do_fft(amplitudeList);
             IFSCLR(0) = 0x100;
             sample_counter = 0;
           } else{
-              // Save to sample array
-              save(received, sample_counter, amplitudeList);
+            // Save to sample array
+            save(received, sample_counter, amplitudeList);
             IFSCLR(0) = 0x100;
             sample_counter = sample_counter + 1;
           }
