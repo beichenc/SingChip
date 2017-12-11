@@ -10,7 +10,6 @@
 
 char textbuffer[4][16];
 
-//TODO: Do we need this file?
 const uint8_t const font[] = {
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,

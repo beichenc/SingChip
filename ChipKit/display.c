@@ -106,13 +106,6 @@ void display_string(int line, char *s) {
 			textbuffer[line][i] = ' ';
 }
 
-void display_clear(int line) {
-	int i;
-	for (i = 0; i < 16; i++) {
-		textbuffer[line][i] = ' ';
-	}
-}
-
 void display_image(int x, const uint8_t *data) {
 	int i, j;
 

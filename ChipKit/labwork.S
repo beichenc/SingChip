@@ -1,6 +1,5 @@
   # labwork.S
   # Written 2017 by Amy Chen & Beichen Chen
-  # Skeleton file for IS1200/IS1500 lab 1.
   # The macros PUSH and POP are in the public domain.
   # Please add your own code at the end of the file.
 
